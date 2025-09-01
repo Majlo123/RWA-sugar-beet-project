@@ -1,5 +1,6 @@
 // Uvozimo ethers iz hardhat biblioteke
-import { ethers } from "hardhat";
+import pkg from "hardhat";
+const { ethers } = pkg;
 
 async function main() {
   // Dobijamo nalog (adresu) koji će izvršiti deployment.
