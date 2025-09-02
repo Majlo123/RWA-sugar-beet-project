@@ -5,7 +5,7 @@ const swaggerDefinition = {
   info: {
     title: "Sugar Beet Token API",
     version: "1.0.0",
-    description: "API za upravljanje investicijama u šećernu repu",
+    description: "API za upravljanje investicijama u šećernu repu i korisnicima",
   },
   servers: [
     {
@@ -13,9 +13,35 @@ const swaggerDefinition = {
     },
   ],
   paths: {
+    "/auth/register": {
+      post: {
+        summary: "Registruje novog korisnika",
+        tags: ["Auth"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  username: { type: "string", example: "investitor1" },
+                  password: { type: "string", example: "lozinka123" },
+                  ethAddress: { type: "string", example: "0x... adresa novog naloga" }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          201: { description: "Korisnik uspešno registrovan." },
+          400: { description: "Korisničko ime je zauzeto ili su podaci neispravni." }
+        }
+      }
+    },
     "/token-price": {
       get: {
         summary: "Vraća cenu jednog tokena u USD",
+        tags: ["Treasury"],
         description: "Očitava javnu konstantu TOKEN_PRICE_USD sa pametnog ugovora.",
         responses: {
           200: {
@@ -37,6 +63,7 @@ const swaggerDefinition = {
     "/record-investment": {
       post: {
         summary: "Evidentira novu investiciju (samo za admina)",
+        tags: ["Treasury"],
         description: "Poziva recordInvestment funkciju na pametnom ugovoru.",
         requestBody: {
           required: true,

@@ -4,6 +4,7 @@ const swaggerUi = require("swagger-ui-express");
 
 const swaggerDefinition = require("./docs/swaggerDef");
 const treasuryRoutes = require("./routes/treasury.routes");
+const authRoutes = require("./routes/auth.routes");
 const db = require("./config/database");
 
 // Uvozimo User model koji smo upravo kreirali
@@ -24,7 +25,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // API Rute
 app.use("/", treasuryRoutes);
-
+app.use("/auth", authRoutes)
 // Pokretanje servera nakon sinhronizacije sa bazom
 const startServer = async () => {
   try {
