@@ -7,6 +7,20 @@ const swaggerDefinition = {
     version: "1.0.0",
     description: "API za upravljanje investicijama u šećernu repu i korisnicima",
   },
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      },
+    },
+  },
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
   servers: [
     {
       url: `http://localhost:${PORT}`,
@@ -128,6 +142,17 @@ const swaggerDefinition = {
           },
         },
       },
+    },
+     "/users/profile": { // <-- NOVA RUTA
+      get: {
+        summary: "Vraća podatke o prijavljenom korisniku",
+        tags: ["Users"],
+        security: [{ bearerAuth: [] }], // Označavamo da je ova ruta zaštićena
+        responses: {
+          200: { description: "Podaci o korisniku." },
+          401: { description: "Autorizacija neuspešna." }
+        }
+      }
     },
   },
 };
