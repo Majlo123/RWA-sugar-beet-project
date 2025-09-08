@@ -38,6 +38,30 @@ const swaggerDefinition = {
         }
       }
     },
+     "/auth/login": {
+      post: {
+        summary: "Prijavljuje postojećeg korisnika",
+        tags: ["Auth"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  username: { type: "string", example: "investitor1" },
+                  password: { type: "string", example: "lozinka123" }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: "Uspešna prijava, vraća JWT token." },
+          400: { description: "Pogrešni podaci." }
+        }
+      }
+    },
     "/token-price": {
       get: {
         summary: "Vraća cenu jednog tokena u USD",

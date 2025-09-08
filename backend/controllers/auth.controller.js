@@ -22,5 +22,16 @@ const register = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
-
-module.exports = { register };
+  const login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Korisničko ime i lozinka su obavezni.' });
+    }
+    const result = await authService.loginUser(username, password);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+module.exports = { register,login };
