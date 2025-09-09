@@ -2,9 +2,9 @@ import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function Layout() {
-  const { user, logout } = useAuth();
+  const { user, account, logout, connectWallet } = useAuth();
   const navigate = useNavigate();
-  
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -16,17 +16,22 @@ function Layout() {
         <nav>
           <div className="nav-links">
             <Link to="/">Home</Link>
-            {/* Prikazujemo link ka profilu samo ako je korisnik ulogovan */}
             {user && <Link to="/profile">Profile</Link>}
-            {/* Prikazujemo admin link samo ako je korisnik admin */}
             {user && user.role === 'admin' && <Link to="/admin">Admin Panel</Link>}
           </div>
 
           <div className="user-actions">
             {user ? (
               <>
-                {/* Prikazujemo ime korisnika */}
                 <span>Welcome, {user.username}</span>
+                
+                {!account && (
+                  <button onClick={connectWallet} className="logout-button">Connect Wallet</button>
+                )}
+                {account && (
+                  <span>{`${account.substring(0, 6)}...${account.substring(account.length - 4)}`}</span>
+                )}
+
                 <button onClick={handleLogout} className="logout-button">Logout</button>
               </>
             ) : (

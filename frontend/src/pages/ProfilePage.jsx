@@ -1,47 +1,41 @@
 import { useEffect, useState } from 'react';
 import { getProfile } from '../services/userService';
+import { useAuth } from '../context/AuthContext';
 import { ethers } from 'ethers';
-
-// Uvozimo ABI-je
 import treasuryAbi from '../treasuryAbi.json';
 import beetAbi from '../beetAbi.json';
 
-// Adrese Vaših deploy-ovanih ugovora
-const treasuryAddress = "ADRESA_VAŠEG_TREASURY_UGOVORA"; // Zamenite sa pravom adresom
-const beetAddress = "ADRESA_VAŠEG_BEET_TOKENA"; // Zamenite sa pravom adresom
+const treasuryAddress = "0x20C9F172583F02202c6E17E08f64cefa8A4dc20c"; // Zamenite Vašom adresom
+const beetAddress = "0x8c9DAb0fd2368A5c60e0dE9eCFb445226E675D79"; // Zamenite Vašom adresom
 
 function ProfilePage() {
-  const [user, setUser] = useState(null); // Podaci iz naše baze
-  const [tokenBalance, setTokenBalance] = useState('0'); // Stanje BEET tokena
-  const [investments, setInvestments] = useState([]); // Lista investicija
+  const [userProfile, setUserProfile] = useState(null);
+  const [tokenBalance, setTokenBalance] = useState('0');
+  const [investments, setInvestments] = useState([]);
   const [error, setError] = useState('');
+  const { account } = useAuth(); // Uzimamo povezan nalog iz konteksta
 
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        // 1. Dohvatamo podatke o korisniku sa našeg backend-a
         const profileData = await getProfile();
-        setUser(profileData);
+        setUserProfile(profileData);
 
-        // 2. Povezujemo se na blockchain preko MetaMask-a za čitanje podataka
         if (window.ethereum) {
           const provider = new ethers.BrowserProvider(window.ethereum);
           const beetContract = new ethers.Contract(beetAddress, beetAbi, provider);
           const treasuryContract = new ethers.Contract(treasuryAddress, treasuryAbi, provider);
 
-          // 3. Dohvatamo stanje BEET tokena
           const balance = await beetContract.balanceOf(profileData.ethAddress);
-          setTokenBalance(ethers.formatUnits(balance, 18)); // Pretvaramo iz wei u ETH format
+          setTokenBalance(ethers.formatUnits(balance, 18));
 
-          // 4. Dohvatamo investicije korisnika
           const investmentIds = await treasuryContract.getInvestmentIdsForInvestor(profileData.ethAddress);
           const investmentDetails = await Promise.all(
             investmentIds.map(id => treasuryContract.investments(id))
           );
           setInvestments(investmentDetails);
-
         } else {
-          throw new Error("MetaMask nije instaliran.");
+          throw new Error("MetaMask is not installed.");
         }
       } catch (err) {
         setError(err.message);
@@ -49,25 +43,33 @@ function ProfilePage() {
     };
 
     fetchAllData();
-  }, []); // Prazan niz [] znači da će se ovo izvršiti samo jednom
+  }, []);
 
   if (error) {
     return <div className="error-message">Error: {error}</div>;
   }
 
-  if (!user) {
+  if (!userProfile) {
     return <div>Loading profile...</div>;
   }
 
+  const isAddressMismatch = account && userProfile.ethAddress.toLowerCase() !== account.toLowerCase();
+
   return (
     <div>
+      {isAddressMismatch && (
+        <div className="error-message" style={{textAlign: 'center', marginBottom: '20px'}}>
+          Warning: The connected MetaMask account ({`${account.substring(0, 6)}...`}) does not match the address registered with this profile.
+        </div>
+      )}
+
       <h1>User Dashboard</h1>
       
       <div className="profile-section">
         <h3>User Info</h3>
-        <p><strong>Username:</strong> {user.username}</p>
-        <p><strong>Ethereum Address:</strong> {user.ethAddress}</p>
-        <p><strong>Role:</strong> {user.role}</p>
+        <p><strong>Username:</strong> {userProfile.username}</p>
+        <p><strong>Registered Ethereum Address:</strong> {userProfile.ethAddress}</p>
+        <p><strong>Role:</strong> {userProfile.role}</p>
       </div>
 
       <div className="profile-section">
