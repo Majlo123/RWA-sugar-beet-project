@@ -3,8 +3,10 @@ import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
+import AdminPage from './pages/AdminPage';
 import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute'; // <-- Uvozimo čuvara
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminProtectedRoute from './components/AdminProtectedRoute'; // <-- Uvozimo
 
 function App() {
   return (
@@ -16,10 +18,14 @@ function App() {
           <Route path="register" element={<RegisterPage />} />
           <Route path="login" element={<LoginPage />} />
           
-          {/* Zaštićene rute */}
+          {/* Rute za sve prijavljene korisnike */}
           <Route element={<ProtectedRoute />}>
             <Route path="profile" element={<ProfilePage />} />
-            {/* Ovde bi išle i sve druge stranice samo za prijavljene korisnike */}
+          </Route>
+          
+          {/* Rute samo za admine */}
+          <Route element={<AdminProtectedRoute />}>
+            <Route path="admin" element={<AdminPage />} />
           </Route>
         </Route>
       </Routes>

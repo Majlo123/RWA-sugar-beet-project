@@ -14,18 +14,51 @@ body {
   min-height: 100vh;
 }
 
+/* --- AŽURIRANI DEO --- */
 .app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background-color: #282c34;
-  padding: 20px;
+  padding: 10px 20px;
   color: white;
 }
 
-.app-header nav a {
+.app-header nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.nav-links, .user-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* Dodaje razmak između elemenata */
+}
+
+.app-header a {
   color: white;
-  margin: 0 15px;
   text-decoration: none;
   font-size: 1.1em;
 }
+
+.logout-button {
+  background: none;
+  border: 1px solid white;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1em;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.logout-button:hover {
+  background-color: white;
+  color: #282c34;
+}
+/* --- KRAJ AŽURIRANOG DELA --- */
 
 .app-main {
   flex-grow: 1;
@@ -38,6 +71,7 @@ body {
   color: white;
   text-align: center;
 }
+
 .form-container {
   max-width: 400px;
   margin: 40px auto;

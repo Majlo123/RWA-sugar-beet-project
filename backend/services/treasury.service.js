@@ -6,6 +6,9 @@ const fetchTokenPrice = async () => {
 };
 
 const recordNewInvestment = async (investorAddress, amountUSD) => {
+  if (amountUSD % 1000 !== 0) {
+    throw new Error('Investment amount must be a multiple of 1000.');
+  }
   console.log(`Započinjem transakciju za evidentiranje investicije za ${investorAddress} u iznosu od ${amountUSD} USD...`);
   const tx = await treasuryRepository.createInvestment(investorAddress, amountUSD);
   console.log(`Transakcija uspešna! Hash: ${tx.hash}`);
