@@ -4,14 +4,13 @@ const register = async (req, res) => {
   try {
     const { username, password, ethAddress } = req.body;
     if (!username || !password || !ethAddress) {
-      return res.status(400).json({ message: 'Sva polja su obavezna.' });
+      return res.status(400).json({ message: 'All fields are required.' }); // <-- IZMENA
     }
 
     const user = await authService.registerUser(username, password, ethAddress);
 
-    // Ne vraćamo lozinku u odgovoru
     res.status(201).json({
-      message: 'Korisnik uspešno registrovan.',
+      message: 'User registered successfully.', // <-- IZMENA
       user: {
         id: user.id,
         username: user.username,
@@ -22,11 +21,12 @@ const register = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
-  const login = async (req, res) => {
+
+const login = async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
-      return res.status(400).json({ message: 'Korisničko ime i lozinka su obavezni.' });
+      return res.status(400).json({ message: 'Username and password are required.' }); // <-- IZMENA
     }
     const result = await authService.loginUser(username, password);
     res.json(result);
@@ -34,4 +34,5 @@ const register = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
-module.exports = { register,login };
+
+module.exports = { register, login };

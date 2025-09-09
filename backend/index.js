@@ -7,6 +7,7 @@ const treasuryRoutes = require("./routes/treasury.routes");
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 const db = require("./config/database");
+const cors = require('cors');
 
 // Uvozimo User model koji smo upravo kreirali
 require("./models/user.model");
@@ -16,7 +17,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json());
-
+app.use(cors());
 // Swagger Docs
 const swaggerSpec = swaggerJSDoc({
     definition: swaggerDefinition,
