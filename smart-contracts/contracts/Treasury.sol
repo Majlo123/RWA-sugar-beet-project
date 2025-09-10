@@ -30,7 +30,7 @@ contract Treasury is Ownable {
     // Konstante definisane prema specifikaciji
     uint256 public constant TOKEN_PRICE_USD = 1000; // Cena jednog tokena je 1000 USD 
     uint256 public constant YIELD_PERCENTAGE = 10; // Prinos je 10% [cite: 7]
-    uint256 public constant INVESTMENT_DURATION_SECONDS = 365 days; // Trajanje ciklusa je 1 godina 
+    uint256 public constant INVESTMENT_DURATION_SECONDS = 60; // Trajanje ciklusa je 1 godina 
 
     // Event koji se emituje kada se prinos uspesno zatrazi
     event YieldClaimed(uint256 investmentId, address investor);
