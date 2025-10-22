@@ -5,8 +5,8 @@ import { ethers } from 'ethers';
 import treasuryAbi from '../treasuryAbi.json';
 import beetAbi from '../beetAbi.json';
 
-const treasuryAddress = "0x773E59081f1Cb9AB78Bd69c9Ca61d0dA0DfD6f12";
-const beetAddress = "0xB01DA69DCf635299B364E8eccA935f47Ae90b5A1";
+const treasuryAddress = "0x0aE63859cCb63c6c031d1Ab93CE9Ba8a2AD41c83";
+const beetAddress = "0x9d00209F07042cF2F337570ea4c87c860525a638";
 
 function ProfilePage() {
   const [userProfile, setUserProfile] = useState(null);
