@@ -1,4 +1,4 @@
-# RWA Sugar Beet Tokenization - Diploma Thesis Project
+# RWA Sugar Beet Tokenization - Bachelor Thesis Project
 
 This repository contains the source code for a full-stack decentralized application developed as a diploma thesis. The project demonstrates the tokenization of real-world assets (RWA) using the example of investing in sugar beet production. The system allows investors to receive digital tokens as proof of their investment and claim a yield after a one-year cycle.
 
