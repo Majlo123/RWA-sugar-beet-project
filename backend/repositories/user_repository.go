@@ -35,3 +35,11 @@ func FindUserByID(id uint) (*models.User, error) {
 func CreateUser(user *models.User) error {
 	return config.DB.Create(user).Error
 }
+
+func GetAllUsers() ([]models.User, error) {
+	var users []models.User
+	if err := config.DB.Order("id ASC").Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}

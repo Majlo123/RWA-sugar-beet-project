@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { randomEthAddress } from '../utils/helpers';
+import { adminCredentials, getAdminToken, getRegularUserToken } from '../utils/auth';
 
 test.describe('GET /token-price', () => {
   test('200 returns tokenPriceUSD as string', async ({ request }) => {
@@ -14,17 +15,37 @@ test.describe('GET /token-price', () => {
 });
 
 test.describe('POST /record-investment', () => {
-  test('400 when fields are missing (empty body)', async ({ request }) => {
-    const res = await request.post('/record-investment', { data: {} });
-    expect(res.status()).toBe(400);
-    expect((await res.json()).error).toBe(
-      'Potrebno je uneti adresu investitora i iznos.',
+  test('401 when no token provided', async ({ request }) => {
+    const res = await request.post('/record-investment', {
+      data: { investorAddress: randomEthAddress(), amountUSD: 1000 },
+    });
+    expect(res.status()).toBe(401);
+    expect((await res.json()).message).toBe(
+      'Autorizacija neuspešna: Token nije priložen.',
     );
   });
 
-  test('400 when only investorAddress provided', async ({ request }) => {
+  test('403 when token belongs to a non-admin user', async ({ request }) => {
+    const token = await getRegularUserToken(request, 'invest_nonadmin');
     const res = await request.post('/record-investment', {
-      data: { investorAddress: randomEthAddress() },
+      headers: { Authorization: `Bearer ${token}` },
+      data: { investorAddress: randomEthAddress(), amountUSD: 1000 },
+    });
+    expect(res.status()).toBe(403);
+    expect((await res.json()).message).toBe(
+      'Pristup odbijen: Potrebne su admin privilegije.',
+    );
+  });
+
+  test('400 when fields are missing (admin token, empty body)', async ({ request }) => {
+    test.skip(
+      !adminCredentials(),
+      'Set ADMIN_USERNAME and ADMIN_PASSWORD env vars to run admin-gated tests.',
+    );
+    const token = await getAdminToken(request);
+    const res = await request.post('/record-investment', {
+      headers: { Authorization: `Bearer ${token}` },
+      data: {},
     });
     expect(res.status()).toBe(400);
     expect((await res.json()).error).toBe(
@@ -32,8 +53,14 @@ test.describe('POST /record-investment', () => {
     );
   });
 
-  test('500 when amountUSD is not a multiple of 1000', async ({ request }) => {
+  test('500 when amountUSD is not a multiple of 1000 (admin token)', async ({ request }) => {
+    test.skip(
+      !adminCredentials(),
+      'Set ADMIN_USERNAME and ADMIN_PASSWORD env vars to run admin-gated tests.',
+    );
+    const token = await getAdminToken(request);
     const res = await request.post('/record-investment', {
+      headers: { Authorization: `Bearer ${token}` },
       data: { investorAddress: randomEthAddress(), amountUSD: 1500 },
     });
     expect(res.status()).toBe(500);

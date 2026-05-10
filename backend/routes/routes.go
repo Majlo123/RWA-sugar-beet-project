@@ -18,6 +18,16 @@ func RegisterRoutes(r *gin.Engine) {
 		users.GET("/profile", middleware.AuthMiddleware(), controllers.GetProfile)
 	}
 
+	admin := r.Group("/admin")
+	admin.Use(middleware.AuthMiddleware(), middleware.AdminMiddleware())
+	{
+		admin.GET("/analytics", controllers.GetAnalytics)
+	}
+
 	r.GET("/token-price", controllers.GetTokenPrice)
-	r.POST("/record-investment", controllers.RecordInvestment)
+	r.POST("/record-investment",
+		middleware.AuthMiddleware(),
+		middleware.AdminMiddleware(),
+		controllers.RecordInvestment,
+	)
 }

@@ -19,7 +19,7 @@ export default defineConfig({
   projects: [
     {
       name: 'api',
-      testMatch: /(auth|users|treasury)\.spec\.ts/,
+      testMatch: /(auth|users|treasury|admin)\.spec\.ts/,
     },
     {
       name: 'browser',

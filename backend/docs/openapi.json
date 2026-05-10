@@ -96,7 +96,8 @@
       "post": {
         "summary": "Evidentira novu investiciju (samo za admina)",
         "tags": ["Treasury"],
-        "description": "Poziva recordInvestment funkciju na pametnom ugovoru.",
+        "description": "Poziva recordInvestment funkciju na pametnom ugovoru. Zahteva admin JWT token.",
+        "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -145,6 +146,74 @@
         "responses": {
           "200": { "description": "Podaci o korisniku." },
           "401": { "description": "Autorizacija neuspešna." }
+        }
+      }
+    },
+    "/admin/analytics": {
+      "get": {
+        "summary": "Vraća kompletnu analitiku investicija (samo za admina)",
+        "tags": ["Admin"],
+        "description": "Agregira podatke iz baze (korisnici) i sa blockchain-a (investicije po korisniku) i vraća sumarne metrike, listu svih investicija i listu svih korisnika sa njihovim ulaganjima.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Uspešno dohvaćena analitika.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "totalUsers": { "type": "integer", "example": 5 },
+                        "totalInvestments": { "type": "integer", "example": 12 },
+                        "uniqueInvestors": { "type": "integer", "example": 3 },
+                        "totalUSDInvested": { "type": "integer", "example": 24000 },
+                        "totalBEETMinted": { "type": "integer", "example": 24 },
+                        "claimedCount": { "type": "integer", "example": 2 },
+                        "maturedUnclaimedCount": { "type": "integer", "example": 1 },
+                        "pendingCount": { "type": "integer", "example": 9 }
+                      }
+                    },
+                    "investments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "username": { "type": "string" },
+                          "ethAddress": { "type": "string" },
+                          "amountUSD": { "type": "integer" },
+                          "startTime": { "type": "integer" },
+                          "maturesOn": { "type": "integer" },
+                          "isClaimed": { "type": "boolean" },
+                          "isMatured": { "type": "boolean" }
+                        }
+                      }
+                    },
+                    "users": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer" },
+                          "username": { "type": "string" },
+                          "ethAddress": { "type": "string" },
+                          "role": { "type": "string" },
+                          "createdAt": { "type": "string" },
+                          "investmentCount": { "type": "integer" },
+                          "totalInvested": { "type": "integer" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Token nije priložen ili nije validan." },
+          "403": { "description": "Korisnik nema admin privilegije." }
         }
       }
     }
