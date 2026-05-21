@@ -233,6 +233,11 @@
            bg-slate-700/50 text-slate-300 border border-slate-600/50 tracking-wide;
   }
 
+  .badge-error {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold
+           bg-rose-500/15 text-rose-300 border border-rose-500/30 tracking-wide;
+  }
+
   .alert {
     @apply rounded-xl px-5 py-3.5 text-[15px] border;
   }

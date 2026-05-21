@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Plus, Loader2, Wallet, Coins, Info } from 'lucide-react';
+import { Plus, Loader2, Wallet, Coins, Info, ExternalLink, CheckCircle2 } from 'lucide-react';
 import { recordInvestment } from '../../services/treasuryService';
+
+const SEPOLIA_TX_BASE = 'https://sepolia.etherscan.io/tx/';
 
 function RecordInvestmentPage() {
   const [investorAddress, setInvestorAddress] = useState('');
   const [tokenAmount, setTokenAmount] = useState('');
-  const [message, setMessage] = useState('');
+  const [txHash, setTxHash] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +21,7 @@ function RecordInvestmentPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setMessage('');
+    setTxHash('');
     if (amountUSD === 0) {
       setError('Please enter a valid number of tokens.');
       return;
@@ -27,7 +29,7 @@ function RecordInvestmentPage() {
     setLoading(true);
     try {
       const data = await recordInvestment({ investorAddress, amountUSD });
-      setMessage(`Investment recorded. Tx: ${data.txHash.substring(0, 10)}…${data.txHash.substring(data.txHash.length - 6)}`);
+      setTxHash(data.txHash);
       setInvestorAddress('');
       setTokenAmount('');
     } catch (err) {
@@ -38,6 +40,11 @@ function RecordInvestmentPage() {
   };
 
   return (
+    <div className="space-y-8">
+    <div>
+      <span className="eyebrow-amber mb-3 inline-flex items-center gap-1.5"><Plus className="w-4 h-4" /> Admin Access</span>
+      <h1 className="text-5xl sm:text-6xl">Record Investment</h1>
+    </div>
     <div className="grid lg:grid-cols-12 gap-8">
       <div className="lg:col-span-7">
         <div className="card-padded">
@@ -96,7 +103,33 @@ function RecordInvestmentPage() {
             )}
 
             {error && <div className="alert-error">{error}</div>}
-            {message && <div className="alert-success">{message}</div>}
+            {txHash && (
+              <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-5">
+                <div className="flex items-start gap-3 mb-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display font-bold text-emerald-200 text-base">Investment recorded on-chain</p>
+                    <p className="text-sm text-emerald-200/70 mt-0.5 font-medium">
+                      BEET tokens minted to the investor's wallet.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 pl-8">
+                  <span className="font-mono text-xs text-emerald-200/60">
+                    {txHash.substring(0, 14)}…{txHash.substring(txHash.length - 8)}
+                  </span>
+                  <a
+                    href={`${SEPOLIA_TX_BASE}${txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm font-display font-bold text-emerald-300 hover:text-emerald-200 transition-colors"
+                  >
+                    View on Etherscan
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -146,6 +179,7 @@ function RecordInvestmentPage() {
           a few seconds to confirm on-chain.</span>
         </div>
       </div>
+    </div>
     </div>
   );
 }

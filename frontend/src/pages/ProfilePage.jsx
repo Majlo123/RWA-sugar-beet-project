@@ -1,13 +1,24 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
 import {
   Coins, Wallet, ShieldAlert, RefreshCcw, ShieldCheck,
   TrendingUp, Loader2, Calendar, CheckCircle2, Clock, AlertTriangle,
+  UserCheck, XCircle, ExternalLink,
 } from 'lucide-react';
+
+const SEPOLIA_ADDRESS_BASE = 'https://sepolia.etherscan.io/address/';
 import { getProfile } from '../services/userService';
 import { useAuth } from '../context/AuthContext';
 import treasuryAbi from '../treasuryAbi.json';
 import beetAbi from '../beetAbi.json';
+
+const KYC_BADGE = {
+  verified: { label: 'Verified', class: 'badge-success', Icon: CheckCircle2 },
+  pending:  { label: 'Pending review', class: 'badge-info', Icon: Clock },
+  rejected: { label: 'Rejected', class: 'badge-error', Icon: XCircle },
+  none:     { label: 'Not submitted', class: 'badge-warning', Icon: AlertTriangle },
+};
 
 const treasuryAddress = "0x0aE63859cCb63c6c031d1Ab93CE9Ba8a2AD41c83";
 const beetAddress = "0x9d00209F07042cF2F337570ea4c87c860525a638";
@@ -21,7 +32,6 @@ function ProfilePage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [claimingId, setClaimingId] = useState(null);
-  const [message, setMessage] = useState('');
   const { account, connectWallet } = useAuth();
 
   const fetchAllData = async () => {
@@ -71,7 +81,6 @@ function ProfilePage() {
 
   const handleClaim = async (investmentId) => {
     setError('');
-    setMessage('');
     if (!account) {
       alert("Please connect your wallet first.");
       return;
@@ -83,7 +92,6 @@ function ProfilePage() {
       const treasury = new ethers.Contract(treasuryAddress, treasuryAbi, signer);
       const tx = await treasury.claimYield(investmentId);
       await tx.wait();
-      setMessage(`Yield claimed! Tx: ${tx.hash.substring(0, 10)}…${tx.hash.substring(tx.hash.length - 6)}`);
       fetchAllData();
     } catch (err) {
       console.error(err);
@@ -155,7 +163,10 @@ function ProfilePage() {
         </div>
       )}
 
-      {message && <div className="alert-success mb-6">{message}</div>}
+      {userProfile && userProfile.role !== 'admin' && userProfile.kycStatus !== 'verified' && (
+        <KYCBanner status={userProfile.kycStatus} reason={userProfile.kycRejectionReason} />
+      )}
+
       {error && userProfile && <div className="alert-error mb-6">{error}</div>}
 
       {/* Hero balance card */}
@@ -205,6 +216,22 @@ function ProfilePage() {
               label="Member since"
               value={userProfile?.createdAt ? new Date(userProfile.createdAt).toLocaleDateString() : '-'}
             />
+            {userProfile?.role !== 'admin' && (
+              <Row
+                label="KYC"
+                value={
+                  (() => {
+                    const meta = KYC_BADGE[userProfile?.kycStatus || 'none'] || KYC_BADGE.none;
+                    return (
+                      <span className={meta.class}>
+                        <meta.Icon className="w-3 h-3" />
+                        {meta.label}
+                      </span>
+                    );
+                  })()
+                }
+              />
+            )}
           </div>
         </div>
 
@@ -296,6 +323,15 @@ function ProfilePage() {
                         <span className="flex items-center gap-1.5">
                           <Clock className="w-3.5 h-3.5" /> Matures {formatDate(inv.maturesOn)}
                         </span>
+                        <a
+                          href={`${SEPOLIA_ADDRESS_BASE}${inv.investor}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200 transition-colors font-semibold"
+                        >
+                          View on Etherscan
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
                       </p>
                     </div>
                   </div>
@@ -341,6 +377,52 @@ function Row({ label, value }) {
     <div className="flex items-center justify-between gap-2">
       <span className="text-slate-400">{label}</span>
       <span className="text-slate-100 truncate">{value}</span>
+    </div>
+  );
+}
+
+function KYCBanner({ status, reason }) {
+  const config = {
+    none: {
+      title: 'KYC verification required',
+      subtitle: 'Verify your identity so the administrator can record investments to your wallet.',
+      cta: 'Start verification',
+      cls: 'bg-amber-500/10 border-amber-500/30 text-amber-200',
+      iconCls: 'text-amber-400',
+      Icon: ShieldAlert,
+    },
+    pending: {
+      title: 'KYC submission under review',
+      subtitle: 'An administrator is reviewing your details. You will be notified once a decision is made.',
+      cta: 'View details',
+      cls: 'bg-blue-500/10 border-blue-500/30 text-blue-200',
+      iconCls: 'text-blue-400',
+      Icon: Clock,
+    },
+    rejected: {
+      title: 'KYC submission rejected',
+      subtitle: reason || 'Submit a new request with corrected details.',
+      cta: 'Resubmit',
+      cls: 'bg-rose-500/10 border-rose-500/30 text-rose-200',
+      iconCls: 'text-rose-400',
+      Icon: XCircle,
+    },
+  };
+  const c = config[status] || config.none;
+
+  return (
+    <div className={`alert mb-6 flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row ${c.cls}`}>
+      <div className="flex items-start gap-3">
+        <c.Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${c.iconCls}`} />
+        <div>
+          <p className="font-display font-bold text-base mb-0.5">{c.title}</p>
+          <p className="text-sm text-pretty">{c.subtitle}</p>
+        </div>
+      </div>
+      <Link to="/kyc" className="btn-primary text-sm flex-shrink-0">
+        <UserCheck className="w-4 h-4" />
+        {c.cta}
+      </Link>
     </div>
   );
 }

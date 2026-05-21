@@ -2,11 +2,14 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"math/big"
 
 	"github.com/Majlo123/sugar-beet-backend/repositories"
 )
+
+var ErrInvestmentValidation = errors.New("investment validation error")
 
 type TokenPriceResponse struct {
 	TokenPriceUSD string `json:"tokenPriceUSD"`
@@ -27,11 +30,26 @@ func FetchTokenPrice() (*TokenPriceResponse, error) {
 
 func RecordNewInvestment(investorAddress string, amountUSD int64) (*RecordInvestmentResponse, error) {
 	if amountUSD%1000 != 0 {
-		return nil, errors.New("Investment amount must be a multiple of 1000.")
+		return nil, fmt.Errorf("%w: Investment amount must be a multiple of 1000.", ErrInvestmentValidation)
+	}
+
+	user, err := repositories.FindUserByEthAddress(investorAddress)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, fmt.Errorf("%w: Investor address is not registered in the system.", ErrInvestmentValidation)
+	}
+	if user.KYCStatus != KYCStatusVerified {
+		status := user.KYCStatus
+		if status == "" {
+			status = KYCStatusNone
+		}
+		return nil, fmt.Errorf("%w: Investor has not completed KYC verification (current status: %s).", ErrInvestmentValidation, status)
 	}
 
 	log.Printf(
-		"Započinjem transakciju za evidentiranje investicije za %s u iznosu od %d USD...",
+		"Starting transaction to record investment for %s, amount %d USD...",
 		investorAddress, amountUSD,
 	)
 
@@ -41,6 +59,6 @@ func RecordNewInvestment(investorAddress string, amountUSD int64) (*RecordInvest
 	}
 
 	txHash := tx.Hash().Hex()
-	log.Printf("Transakcija uspešna! Hash: %s", txHash)
+	log.Printf("Transaction successful. Hash: %s", txHash)
 	return &RecordInvestmentResponse{Success: true, TxHash: txHash}, nil
 }

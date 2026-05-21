@@ -13,6 +13,33 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var kycColumns = []string{
+	"KYCStatus", "KYCFullName", "KYCDocumentType", "KYCDocumentNumber",
+	"KYCDateOfBirth", "KYCCountry", "KYCDocumentPath",
+	"KYCSubmittedAt", "KYCReviewedAt", "KYCRejectionReason",
+}
+
+func syncUserModel() error {
+	migrator := config.DB.Migrator()
+
+	if !migrator.HasTable(&models.User{}) {
+		if err := config.DB.AutoMigrate(&models.User{}); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	for _, field := range kycColumns {
+		if !migrator.HasColumn(&models.User{}, field) {
+			if err := migrator.AddColumn(&models.User{}, field); err != nil {
+				return err
+			}
+			log.Printf("Dodata kolona u Users tabelu: %s", field)
+		}
+	}
+	return nil
+}
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("Napomena: .env fajl nije pronađen, koriste se postojeće env varijable.")
@@ -22,10 +49,8 @@ func main() {
 		log.Fatalf("Nije moguće povezati se sa bazom: %v", err)
 	}
 
-	if !config.DB.Migrator().HasTable(&models.User{}) {
-		if err := config.DB.AutoMigrate(&models.User{}); err != nil {
-			log.Fatalf("Sinhronizacija modela nije uspela: %v", err)
-		}
+	if err := syncUserModel(); err != nil {
+		log.Fatalf("Sinhronizacija modela nije uspela: %v", err)
 	}
 	log.Println("Svi modeli su uspešno sinhronizovani.")
 

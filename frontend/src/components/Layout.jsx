@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from "react-router-dom";
-import { Sprout, Wallet, LogOut, ShieldCheck, User as UserIcon, ExternalLink } from "lucide-react";
+import { Sprout, Wallet, LogOut, ShieldCheck, User as UserIcon, ExternalLink, UserCheck, Plus } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 function Layout() {
@@ -34,14 +34,41 @@ function Layout() {
 
             <nav className="hidden md:flex items-center gap-1">
               <NavLink to="/" end className={navLinkClass}>Home</NavLink>
-              {user && <NavLink to="/profile" className={navLinkClass}>Dashboard</NavLink>}
-              {user?.role === 'admin' && <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>}
+              {user && user.role !== 'admin' && <NavLink to="/profile" className={navLinkClass}>Dashboard</NavLink>}
+              {user && user.role !== 'admin' && (
+                <NavLink to="/kyc" className={navLinkClass}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <UserCheck className="w-3.5 h-3.5" />
+                    KYC
+                    {user.kycStatus !== 'verified' && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    )}
+                  </span>
+                </NavLink>
+              )}
+              {user?.role === 'admin' && <NavLink to="/admin" end className={navLinkClass}>Dashboard</NavLink>}
+              {user?.role === 'admin' && (
+                <NavLink to="/admin/kyc" className={navLinkClass}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    KYC Reviews
+                  </span>
+                </NavLink>
+              )}
+              {user?.role === 'admin' && (
+                <NavLink to="/admin/record-investment" className={navLinkClass}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Plus className="w-3.5 h-3.5" />
+                    Record Investment
+                  </span>
+                </NavLink>
+              )}
             </nav>
 
             <div className="flex items-center gap-2.5">
               {user ? (
                 <>
-                  {!account ? (
+                  {user.role !== 'admin' && (!account ? (
                     <button
                       onClick={connectWallet}
                       className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold text-sm bg-slate-800 text-slate-100 border border-slate-700 hover:bg-slate-700 hover:border-slate-600 transition-colors"
@@ -54,7 +81,7 @@ function Layout() {
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                       {account.substring(0, 6)}…{account.substring(account.length - 4)}
                     </div>
-                  )}
+                  ))}
                   <div className="hidden lg:flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-800/50 text-slate-300 text-sm font-medium">
                     {user.role === 'admin' ? <ShieldCheck className="w-4 h-4 text-amber-400" /> : <UserIcon className="w-4 h-4" />}
                     {user.username}
@@ -90,8 +117,11 @@ function Layout() {
           {user && (
             <nav className="md:hidden flex items-center gap-1 pb-2">
               <NavLink to="/" end className={navLinkClass}>Home</NavLink>
-              <NavLink to="/profile" className={navLinkClass}>Dashboard</NavLink>
-              {user.role === 'admin' && <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>}
+              {user.role !== 'admin' && <NavLink to="/profile" className={navLinkClass}>Dashboard</NavLink>}
+              {user.role !== 'admin' && <NavLink to="/kyc" className={navLinkClass}>KYC</NavLink>}
+              {user.role === 'admin' && <NavLink to="/admin" end className={navLinkClass}>Dashboard</NavLink>}
+              {user.role === 'admin' && <NavLink to="/admin/kyc" className={navLinkClass}>KYC</NavLink>}
+              {user.role === 'admin' && <NavLink to="/admin/record-investment" className={navLinkClass}>Record</NavLink>}
             </nav>
           )}
         </div>

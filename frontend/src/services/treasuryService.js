@@ -16,8 +16,8 @@ export const recordInvestment = async (investmentData) => {
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to record investment');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || errorData.message || 'Failed to record investment');
   }
 
   return await response.json();

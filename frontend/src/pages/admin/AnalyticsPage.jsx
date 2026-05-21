@@ -5,8 +5,10 @@ import {
 } from 'recharts';
 import {
   RefreshCcw, TrendingUp, Coins, Users, Loader2,
-  CheckCircle2, AlertTriangle, Clock, Hash,
+  CheckCircle2, AlertTriangle, Clock, Hash, ExternalLink,
 } from 'lucide-react';
+
+const SEPOLIA_ADDRESS_BASE = 'https://sepolia.etherscan.io/address/';
 import { getAnalytics } from '../../services/adminService';
 
 const STATUS_COLORS = {
@@ -95,8 +97,12 @@ function AnalyticsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-end -mt-4">
-        <button onClick={load} disabled={loading} className="btn-secondary text-sm">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <span className="eyebrow-amber mb-3 inline-flex items-center gap-1.5"><TrendingUp className="w-4 h-4" /> Admin Access</span>
+          <h1 className="text-5xl sm:text-6xl">Dashboard</h1>
+        </div>
+        <button onClick={load} disabled={loading} className="btn-secondary text-sm mt-2">
           <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </button>
@@ -222,7 +228,15 @@ function AnalyticsPage() {
                             <td className="px-4 py-4 text-slate-400 font-mono font-medium">#{inv.id}</td>
                             <td className="px-4 py-4 font-display font-semibold text-white">{inv.username}</td>
                             <td className="px-4 py-4 font-mono text-xs text-slate-400" title={inv.ethAddress}>
-                              {shortAddr(inv.ethAddress)}
+                              <a
+                                href={`${SEPOLIA_ADDRESS_BASE}${inv.ethAddress}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 hover:text-emerald-300 transition-colors"
+                              >
+                                {shortAddr(inv.ethAddress)}
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
                             </td>
                             <td className="px-4 py-4 font-display font-bold text-emerald-300 tracking-tight">
                               ${inv.amountUSD.toLocaleString()}

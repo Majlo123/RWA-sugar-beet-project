@@ -2,8 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Sugar Beet Token API",
-    "version": "1.0.0",
-    "description": "API za upravljanje investicijama u šećernu repu i korisnicima"
+    "version": "1.1.0",
+    "description": "API za upravljanje investicijama u šećernu repu, korisnicima i KYC procesom"
   },
   "components": {
     "securitySchemes": {
@@ -11,6 +11,26 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "KYCStatus": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["none", "pending", "verified", "rejected"]
+          },
+          "fullName": { "type": "string" },
+          "documentType": { "type": "string", "enum": ["id_card", "passport"] },
+          "documentNumber": { "type": "string" },
+          "dateOfBirth": { "type": "string" },
+          "country": { "type": "string" },
+          "hasDocument": { "type": "boolean" },
+          "submittedAt": { "type": "string", "format": "date-time" },
+          "reviewedAt": { "type": "string", "format": "date-time" },
+          "rejectionReason": { "type": "string" }
+        }
       }
     }
   },
@@ -96,7 +116,7 @@
       "post": {
         "summary": "Evidentira novu investiciju (samo za admina)",
         "tags": ["Treasury"],
-        "description": "Poziva recordInvestment funkciju na pametnom ugovoru. Zahteva admin JWT token.",
+        "description": "Poziva recordInvestment funkciju na pametnom ugovoru. Investitor mora imati KYC status 'verified'.",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -134,7 +154,8 @@
                 }
               }
             }
-          }
+          },
+          "500": { "description": "KYC nije verifikovan ili greška pri slanju transakcije." }
         }
       }
     },
@@ -149,71 +170,179 @@
         }
       }
     },
+    "/users/kyc": {
+      "get": {
+        "summary": "Vraća KYC status prijavljenog korisnika",
+        "tags": ["KYC"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "KYC podaci.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/KYCStatus" }
+              }
+            }
+          },
+          "401": { "description": "Autorizacija neuspešna." }
+        }
+      }
+    },
+    "/users/kyc/submit": {
+      "post": {
+        "summary": "Šalje KYC zahtev sa dokumentom",
+        "tags": ["KYC"],
+        "description": "Prima multipart/form-data sa ličnim podacima i fotografijom/PDF dokumenta. Postavlja status na 'pending'.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["fullName", "documentType", "documentNumber", "dateOfBirth", "country", "document"],
+                "properties": {
+                  "fullName": { "type": "string", "example": "Petar Petrović" },
+                  "documentType": { "type": "string", "enum": ["id_card", "passport"] },
+                  "documentNumber": { "type": "string", "example": "001234567" },
+                  "dateOfBirth": { "type": "string", "example": "1995-06-12" },
+                  "country": { "type": "string", "example": "Srbija" },
+                  "document": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Zahtev primljen.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/KYCStatus" }
+              }
+            }
+          },
+          "400": { "description": "Nevalidan unos, prevelik fajl, ili već postoji aktivna prijava." }
+        }
+      }
+    },
     "/admin/analytics": {
       "get": {
         "summary": "Vraća kompletnu analitiku investicija (samo za admina)",
         "tags": ["Admin"],
-        "description": "Agregira podatke iz baze (korisnici) i sa blockchain-a (investicije po korisniku) i vraća sumarne metrike, listu svih investicija i listu svih korisnika sa njihovim ulaganjima.",
         "security": [{ "bearerAuth": [] }],
         "responses": {
+          "200": { "description": "Uspešno dohvaćena analitika." },
+          "401": { "description": "Token nije priložen ili nije validan." },
+          "403": { "description": "Korisnik nema admin privilegije." }
+        }
+      }
+    },
+    "/admin/kyc": {
+      "get": {
+        "summary": "Lista svih KYC prijava (samo za admina)",
+        "tags": ["Admin", "KYC"],
+        "description": "Opcioni query parametar 'status' filtrira po statusu (none/pending/verified/rejected).",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": { "type": "string", "enum": ["none", "pending", "verified", "rejected"] }
+          }
+        ],
+        "responses": {
           "200": {
-            "description": "Uspešno dohvaćena analitika.",
+            "description": "Lista prijava.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "summary": {
-                      "type": "object",
-                      "properties": {
-                        "totalUsers": { "type": "integer", "example": 5 },
-                        "totalInvestments": { "type": "integer", "example": 12 },
-                        "uniqueInvestors": { "type": "integer", "example": 3 },
-                        "totalUSDInvested": { "type": "integer", "example": 24000 },
-                        "totalBEETMinted": { "type": "integer", "example": 24 },
-                        "claimedCount": { "type": "integer", "example": 2 },
-                        "maturedUnclaimedCount": { "type": "integer", "example": 1 },
-                        "pendingCount": { "type": "integer", "example": 9 }
-                      }
-                    },
-                    "investments": {
+                    "items": {
                       "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": { "type": "string" },
-                          "username": { "type": "string" },
-                          "ethAddress": { "type": "string" },
-                          "amountUSD": { "type": "integer" },
-                          "startTime": { "type": "integer" },
-                          "maturesOn": { "type": "integer" },
-                          "isClaimed": { "type": "boolean" },
-                          "isMatured": { "type": "boolean" }
-                        }
-                      }
-                    },
-                    "users": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": { "type": "integer" },
-                          "username": { "type": "string" },
-                          "ethAddress": { "type": "string" },
-                          "role": { "type": "string" },
-                          "createdAt": { "type": "string" },
-                          "investmentCount": { "type": "integer" },
-                          "totalInvested": { "type": "integer" }
-                        }
-                      }
+                      "items": { "$ref": "#/components/schemas/KYCStatus" }
                     }
                   }
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/admin/kyc/{userId}/document": {
+      "get": {
+        "summary": "Preuzima KYC dokument korisnika (samo za admina)",
+        "tags": ["Admin", "KYC"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "userId", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binarni sadržaj dokumenta (PDF/JPG/PNG).",
+            "content": {
+              "application/octet-stream": { "schema": { "type": "string", "format": "binary" } }
+            }
           },
-          "401": { "description": "Token nije priložen ili nije validan." },
-          "403": { "description": "Korisnik nema admin privilegije." }
+          "404": { "description": "Dokument ne postoji." }
+        }
+      }
+    },
+    "/admin/kyc/{userId}/approve": {
+      "post": {
+        "summary": "Odobrava KYC prijavu (samo za admina)",
+        "tags": ["Admin", "KYC"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "userId", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prijava odobrena.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/KYCStatus" }
+              }
+            }
+          },
+          "400": { "description": "Prijava nije u statusu 'pending'." }
+        }
+      }
+    },
+    "/admin/kyc/{userId}/reject": {
+      "post": {
+        "summary": "Odbija KYC prijavu (samo za admina)",
+        "tags": ["Admin", "KYC"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "userId", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reason"],
+                "properties": {
+                  "reason": { "type": "string", "example": "Dokument nije čitljiv." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Prijava odbijena.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/KYCStatus" }
+              }
+            }
+          },
+          "400": { "description": "Razlog nije naveden ili prijava nije u statusu 'pending'." }
         }
       }
     }
