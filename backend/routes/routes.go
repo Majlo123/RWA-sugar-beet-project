@@ -21,6 +21,19 @@ func RegisterRoutes(r *gin.Engine) {
 		users.GET("/kyc", controllers.GetMyKYC)
 	}
 
+	payments := r.Group("/payments")
+	payments.Use(middleware.AuthMiddleware())
+	{
+		payments.POST("/initiate", controllers.InitiatePayment)
+		payments.POST("/:id/confirm", controllers.ConfirmPayment)
+		payments.POST("/:id/simulate", controllers.SimulatePayment)
+		payments.POST("/:id/submit-card", controllers.SubmitBankPayment)
+		payments.POST("/paypal/capture", controllers.CapturePayPal)
+		payments.POST("/paypal/cancel", controllers.CancelPayPal)
+		payments.GET("/history", controllers.GetMyPaymentHistory)
+		payments.GET("/:id", controllers.GetPaymentByID)
+	}
+
 	admin := r.Group("/admin")
 	admin.Use(middleware.AuthMiddleware(), middleware.AdminMiddleware())
 	{
@@ -32,9 +45,4 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	r.GET("/token-price", controllers.GetTokenPrice)
-	r.POST("/record-investment",
-		middleware.AuthMiddleware(),
-		middleware.AdminMiddleware(),
-		controllers.RecordInvestment,
-	)
 }
