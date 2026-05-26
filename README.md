@@ -36,10 +36,57 @@ This is a monorepo containing all three main components of the project:
 * **Backend:** Node.js, Express.js, PostgreSQL, Sequelize, JWT, Bcrypt.js, Ethers.js
 * **Frontend:** React, Vite, Ethers.js, React Router
 
-## Setup and Installation
+## Quick Start with Docker (recommended)
+
+The entire stack — BEET (Go backend + React frontend + PostgreSQL) **and** the PSP payment microservices (core/bank/card/paypal/crypto + API gateway + RabbitMQ) — runs with a single command.
 
 ### Prerequisites
-* Node.js and npm
+* Docker Desktop (or Docker Engine + Docker Compose v2)
+* MetaMask browser extension (for blockchain interactions)
+
+### Steps
+1.  Copy the env template and fill in your secrets:
+    ```bash
+    cp .env.example .env
+    # edit .env: SEPOLIA_RPC_URL, SEPOLIA_PRIVATE_KEY, JWT_SECRET, TREASURY_CONTRACT_ADDRESS
+    ```
+2.  Build and start the whole stack:
+    ```bash
+    docker compose up --build
+    ```
+3.  Once everything is healthy, open:
+    * BEET frontend → http://localhost:5173
+    * BEET backend / Swagger → http://localhost:5000/api-docs
+    * PSP API Gateway → http://localhost:8080
+    * RabbitMQ UI → http://localhost:15672 (user/password)
+
+### Exposed ports
+| Service          | Host port |
+|------------------|-----------|
+| BEET frontend    | 5173      |
+| BEET backend     | 5000      |
+| BEET PostgreSQL  | 5432      |
+| PSP API Gateway  | 8080      |
+| Core service     | 8081      |
+| Bank service     | 8082      |
+| Card service     | 8083      |
+| PayPal service   | 8084      |
+| Crypto service   | 8086      |
+| PSP core DB      | 5444      |
+| PSP card DB      | 5433      |
+| Bank DB          | 5445      |
+| PayPal MongoDB   | 27017     |
+| Crypto MongoDB   | 27018     |
+| RabbitMQ AMQP    | 5672      |
+| RabbitMQ UI      | 15672     |
+
+To stop: `docker compose down`. To wipe data: `docker compose down -v`.
+
+## Manual setup (without Docker)
+
+### Prerequisites
+* Go 1.25+
+* Node.js 20+ and npm
 * A running instance of PostgreSQL
 * MetaMask browser extension
 
@@ -50,11 +97,10 @@ This is a monorepo containing all three main components of the project:
 4.  Compile the contracts: `npx hardhat compile`
 5.  Deploy to Sepolia: `npx hardhat run scripts/deploy.js --network sepolia`
 
-### 2. Backend
+### 2. Backend (Go)
 1.  Navigate to the `backend` directory: `cd backend`
-2.  Install dependencies: `npm install`
-3.  Create a `.env` file and configure your database connection, JWT secret, and the deployed `TREASURY_CONTRACT_ADDRESS`.
-4.  Run the server: `node index.js`
+2.  Create a `.env` file and configure your database connection, JWT secret, and the deployed `TREASURY_CONTRACT_ADDRESS` (see `.env.example` at the repo root).
+3.  Run the server: `go run ./cmd/server`
 
 ### 3. Frontend
 1.  Navigate to the `frontend` directory: `cd frontend`
