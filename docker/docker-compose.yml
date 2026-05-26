@@ -1,0 +1,303 @@
+version: '3.8'
+
+services:
+  # 1. Baza za PSP Core Servis
+  psp-core-db:
+    image: postgres:15-alpine
+    container_name: psp-core-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: psp_core_db
+    ports:
+      - "5444:5432"
+    volumes:
+      - psp_core_data:/var/lib/postgresql/data
+    networks:
+      - psp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # 2. Baza za Card/QR Servis
+  psp-card-db:
+    image: postgres:15-alpine
+    container_name: psp-card-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: psp_card_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - psp_card_data:/var/lib/postgresql/data
+    networks:
+      - psp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # --- NOVO: 5. Baza za Bank Service (Simulator Banke) ---
+  bank-db:
+    image: postgres:15-alpine
+    container_name: bank-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: bank_db     # Ime baze koju će Docker sam napraviti
+    ports:
+      - "5445:5432"            # Mapiramo na 5445 da se ne sudara sa ostalima
+    volumes:
+      - bank_data:/var/lib/postgresql/data
+    networks:
+      - psp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # 3. Baza za PayPal Servis
+  paypal-mongo-db:
+    image: mongo:6.0
+    container_name: paypal-mongo-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27017:27017"
+    volumes:
+      - paypal_data:/data/db
+    networks:
+      - psp-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # 4. Message Broker (RabbitMQ)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: psp-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    networks:
+      - psp-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # 5. Core Service (Spring Boot Microservice)
+  core-service:
+    build:
+      context: ../psp-services/core-service
+      dockerfile: Dockerfile
+    container_name: core-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://psp-core-db:5432/psp_core_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: super
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+      PSP_DISABLE_AUTH: "true"
+    depends_on:
+      psp-core-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - psp-network
+    restart: unless-stopped
+
+  # 6. Bank Service (Spring Boot Microservice)
+  bank-service:
+    build:
+      context: ../psp-services/bank-service
+      dockerfile: Dockerfile
+    container_name: bank-service
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://bank-db:5432/bank_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: super
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+    depends_on:
+      bank-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - psp-network
+    restart: unless-stopped
+
+  # 7. Card Service (Spring Boot Microservice)
+  card-service:
+    build:
+      context: ../psp-services/card-service
+      dockerfile: Dockerfile
+    container_name: card-service
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://psp-card-db:5432/psp_card_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: super
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+    depends_on:
+      psp-card-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - psp-network
+    restart: unless-stopped
+
+  # 8. PayPal Service (Spring Boot Microservice)
+  paypal-service:
+    build:
+      context: ../psp-services/paypal-service
+      dockerfile: Dockerfile
+    container_name: paypal-service
+    ports:
+      - "8083:8080"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:password@paypal-mongo-db:27017/paypal_db?authSource=admin
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+    depends_on:
+      paypal-mongo-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - psp-network
+    restart: unless-stopped
+
+  # 8b. Crypto Mongo (for demo persistence if needed)
+  crypto-mongo-db:
+    image: mongo:6.0
+    container_name: crypto-mongo-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27018:27017"
+    volumes:
+      - crypto_data:/data/db
+    networks:
+      - psp-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # 8c. Crypto Service (Spring Boot Microservice)
+  crypto-service:
+    build:
+      context: ../psp-services/crypto-service
+      dockerfile: Dockerfile
+    container_name: crypto-service
+    ports:
+      - "8086:8080"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:password@crypto-mongo-db:27017/psp_crypto_db?authSource=admin
+    depends_on:
+      crypto-mongo-db:
+        condition: service_healthy
+    networks:
+      - psp-network
+    restart: unless-stopped
+
+  # 9. API Gateway (Spring Boot Microservice)
+  api-gateway:
+    build:
+      context: ../psp-services/api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8084:8080"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+      CORE_SERVICE_URL: http://core-service:8080
+      BANK_SERVICE_URL: http://bank-service:8080
+      CARD_SERVICE_URL: http://card-service:8080
+      PAYPAL_SERVICE_URL: http://paypal-service:8080
+      CRYPTO_SERVICE_URL: http://crypto-service:8080
+    depends_on:
+      core-service:
+        condition: service_started
+      bank-service:
+        condition: service_started
+      card-service:
+        condition: service_started
+      paypal-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - psp-network
+    restart: unless-stopped
+
+  # 10. Web Shop Frontend (Angular)
+  web-shop:
+    build:
+      context: ../web-shop
+      dockerfile: Dockerfile
+    container_name: web-shop
+    ports:
+      - "4200:80"
+    environment:
+      API_URL: http://api-gateway:8080
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - psp-network
+    restart: unless-stopped
+
+volumes:
+  psp_core_data:
+  psp_card_data:
+  paypal_data:
+  bank_data:
+  crypto_data:
+
+networks:
+  psp-network:
+    driver: bridge

@@ -1,0 +1,458 @@
+version: '3.8'
+
+# High Availability Configuration for PSP Microservices
+# This docker-compose setup includes:
+# - PostgreSQL Primary-Replica replication for core, bank, and card databases
+# - RabbitMQ cluster
+# - Nginx Load Balancer
+# - Multiple instances of each microservice (scalable with --scale flag)
+
+services:
+  # ============================================================
+  # 1. PRIMARY-REPLICA PostgreSQL Setup for PSP Core Service
+  # ============================================================
+  psp-core-db-primary:
+    image: postgres:15-alpine
+    container_name: psp-core-db-primary
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: psp_core_db
+      # Primary replication settings
+    command: postgres -c wal_level=replica -c max_wal_senders=10 -c max_replication_slots=10 -c shared_buffers=256MB -c effective_cache_size=1GB
+    restart: unless-stopped
+    ports:
+      - "5444:5432"
+    volumes:
+      - psp_core_data_primary:/var/lib/postgresql/data
+      - ./init-replication.sh:/docker-entrypoint-initdb.d/01-init-replication.sh
+    networks:
+      - psp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  psp-core-db-replica:
+    image: postgres:15-alpine
+    container_name: psp-core-db-replica
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      PGPASSWORD: replicate
+    command:
+      - "bash"
+      - "-c"
+      - "pg_basebackup -h psp-core-db-primary -U replicator -D /var/lib/postgresql/data -Fp -Xs -R && chown -R postgres:postgres /var/lib/postgresql && chmod 700 /var/lib/postgresql/data && exec su-exec postgres postgres"
+    ports:
+      - "5446:5432"
+    volumes:
+      - psp_core_data_replica:/var/lib/postgresql/data
+    networks:
+      - psp-network
+    depends_on:
+      psp-core-db-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # ============================================================
+  # 2. PRIMARY-REPLICA PostgreSQL Setup for Bank Service
+  # ============================================================
+  bank-db-primary:
+    image: postgres:15-alpine
+    container_name: bank-db-primary
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: bank_db
+    command: postgres -c wal_level=replica -c max_wal_senders=10 -c max_replication_slots=10 -c shared_buffers=256MB -c effective_cache_size=1GB
+    restart: unless-stopped
+    ports:
+      - "5445:5432"
+    volumes:
+      - bank_data_primary:/var/lib/postgresql/data
+      - ./init-replication.sh:/docker-entrypoint-initdb.d/01-init-replication.sh
+    networks:
+      - psp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  bank-db-replica:
+    image: postgres:15-alpine
+    container_name: bank-db-replica
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      PGPASSWORD: replicate
+    command:
+      - "bash"
+      - "-c"
+      - "pg_basebackup -h bank-db-primary -U replicator -D /var/lib/postgresql/data -Fp -Xs -R && chown -R postgres:postgres /var/lib/postgresql && chmod 700 /var/lib/postgresql/data && exec su-exec postgres postgres"
+    ports:
+      - "5447:5432"
+    volumes:
+      - bank_data_replica:/var/lib/postgresql/data
+    networks:
+      - psp-network
+    depends_on:
+      bank-db-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # ============================================================
+  # 3. PRIMARY-REPLICA PostgreSQL Setup for Card Service
+  # ============================================================
+  psp-card-db-primary:
+    image: postgres:15-alpine
+    container_name: psp-card-db-primary
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: psp_card_db
+    command: postgres -c wal_level=replica -c max_wal_senders=10 -c max_replication_slots=10 -c shared_buffers=256MB -c effective_cache_size=1GB
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    volumes:
+      - psp_card_data_primary:/var/lib/postgresql/data
+      - ./init-replication.sh:/docker-entrypoint-initdb.d/01-init-replication.sh
+    networks:
+      - psp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  psp-card-db-replica:
+    image: postgres:15-alpine
+    container_name: psp-card-db-replica
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      PGPASSWORD: replicate
+    command:
+      - "bash"
+      - "-c"
+      - "pg_basebackup -h psp-card-db-primary -U replicator -D /var/lib/postgresql/data -Fp -Xs -R && chown -R postgres:postgres /var/lib/postgresql && chmod 700 /var/lib/postgresql/data && exec su-exec postgres postgres"
+    ports:
+      - "5448:5432"
+    volumes:
+      - psp_card_data_replica:/var/lib/postgresql/data
+    networks:
+      - psp-network
+    depends_on:
+      psp-card-db-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # ============================================================
+  # 4. RabbitMQ for Message Broker (High Availability Ready)
+  # ============================================================
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: psp-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+      RABBITMQ_DEFAULT_VHOST: /
+    networks:
+      - psp-network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # ============================================================
+  # 5. PayPal MongoDB (with replication-ready settings)
+  # ============================================================
+  paypal-mongo-db:
+    image: mongo:6.0
+    container_name: paypal-mongo-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27017:27017"
+    volumes:
+      - paypal_data:/data/db
+    networks:
+      - psp-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ============================================================
+  # 6. Crypto MongoDB
+  # ============================================================
+  crypto-mongo-db:
+    image: mongo:6.0
+    container_name: crypto-mongo-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27018:27017"
+    volumes:
+      - crypto_data:/data/db
+    networks:
+      - psp-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ============================================================
+  # 7. Nginx Load Balancer & Reverse Proxy
+  # ============================================================
+  nginx-lb:
+    image: nginx:alpine
+    container_name: nginx-lb
+    restart: on-failure
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx-ha.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - psp-network
+    depends_on:
+      - psp-core-db-primary
+      - bank-db-primary
+      - psp-card-db-primary
+      - rabbitmq
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ============================================================
+  # 8. Microservices (Scaled Deployments)
+  # ============================================================
+  # Core Service - instances can be scaled with: docker-compose up --scale core-service=3
+  core-service:
+    build:
+      context: ../psp-services/core-service
+      dockerfile: Dockerfile
+    environment:
+      # Use Primary for writes, Replica for reads (if implemented)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://psp-core-db-primary:5432/psp_core_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: super
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+      PSP_DISABLE_AUTH: "true"
+      PSP_FRONTEND_URL: "https://localhost"
+      # Resilience4j environment variables
+      RESILIENCE4J_CIRCUITBREAKER_ENABLED: "true"
+      RESILIENCE4J_RETRY_ENABLED: "true"
+    depends_on:
+      psp-core-db-primary:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - psp-network
+    restart: unless-stopped
+    expose:
+      - "8080"
+
+  # Bank Service - instances can be scaled
+  bank-service:
+    build:
+      context: ../psp-services/bank-service
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://bank-db-primary:5432/bank_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: super
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+      PSP_FRONTEND_URL: "https://localhost"
+      RESILIENCE4J_CIRCUITBREAKER_ENABLED: "true"
+      RESILIENCE4J_RETRY_ENABLED: "true"
+    depends_on:
+      bank-db-primary:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - psp-network
+    restart: unless-stopped
+    expose:
+      - "8080"
+
+  # Card Service - instances can be scaled
+  card-service:
+    build:
+      context: ../psp-services/card-service
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://psp-card-db-primary:5432/psp_card_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: super
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+      RESILIENCE4J_CIRCUITBREAKER_ENABLED: "true"
+      RESILIENCE4J_RETRY_ENABLED: "true"
+    depends_on:
+      psp-card-db-primary:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - psp-network
+    restart: unless-stopped
+    expose:
+      - "8080"
+
+  # PayPal Service - instances can be scaled
+  paypal-service:
+    build:
+      context: ../psp-services/paypal-service
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:password@paypal-mongo-db:27017/paypal_db?authSource=admin
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+      PSP_FRONTEND_URL: "https://localhost"
+      RESILIENCE4J_CIRCUITBREAKER_ENABLED: "true"
+      RESILIENCE4J_RETRY_ENABLED: "true"
+    depends_on:
+      paypal-mongo-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - psp-network
+    restart: unless-stopped
+    expose:
+      - "8080"
+
+  # Crypto Service - instances can be scaled
+  crypto-service:
+    build:
+      context: ../psp-services/crypto-service
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:password@crypto-mongo-db:27017/psp_crypto_db?authSource=admin
+      RESILIENCE4J_CIRCUITBREAKER_ENABLED: "true"
+      RESILIENCE4J_RETRY_ENABLED: "true"
+    depends_on:
+      crypto-mongo-db:
+        condition: service_healthy
+    networks:
+      - psp-network
+    restart: unless-stopped
+    expose:
+      - "8080"
+
+  # API Gateway - instances can be scaled
+  api-gateway:
+    build:
+      context: ../psp-services/api-gateway
+      dockerfile: Dockerfile
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+      # Direct service-to-service communication (Docker DNS load balances across replicas)
+      CORE_SERVICE_URL: http://core-service:8080
+      BANK_SERVICE_URL: http://bank-service:8080
+      CARD_SERVICE_URL: http://card-service:8080
+      PAYPAL_SERVICE_URL: http://paypal-service:8080
+      CRYPTO_SERVICE_URL: http://crypto-service:8080
+      RESILIENCE4J_CIRCUITBREAKER_ENABLED: "true"
+      RESILIENCE4J_RETRY_ENABLED: "true"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - psp-network
+    restart: unless-stopped
+    expose:
+      - "8080"
+
+  # Web Shop Frontend
+  web-shop:
+    build:
+      context: ../web-shop
+      dockerfile: Dockerfile
+    environment:
+      API_URL: http://nginx-lb/api
+    depends_on:
+      nginx-lb:
+        condition: service_started
+    networks:
+      - psp-network
+    restart: unless-stopped
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  psp_core_data_primary:
+  psp_core_data_replica:
+  bank_data_primary:
+  bank_data_replica:
+  psp_card_data_primary:
+  psp_card_data_replica:
+  paypal_data:
+  crypto_data:
+  rabbitmq_data:
+
+networks:
+  psp-network:
+    driver: bridge

@@ -1,0 +1,498 @@
+version: '3.8'
+
+# =============================================================================
+# DOCKER SWARM MULTI-HOST DEPLOYMENT
+# =============================================================================
+# This stack file deploys the PSP system across 2+ physical/virtual machines
+# using Docker Swarm. It ensures:
+#   - Services distributed across multiple hosts (min 2 nodes)
+#   - Encrypted overlay network for all inter-service communication
+#   - HTTPS termination via Nginx
+#   - Database replication across nodes
+#
+# Node Roles:
+#   Manager Node (Node 1): Databases, RabbitMQ, Nginx Load Balancer
+#   Worker Node  (Node 2): Microservices (core, bank, card, paypal, crypto, gateway, web-shop)
+#
+# Usage:
+#   docker stack deploy -c docker-compose-swarm.yml psp
+# =============================================================================
+
+services:
+
+  # ============================================================
+  # NODE 1 (Manager) - INFRASTRUCTURE LAYER
+  # ============================================================
+
+  # --- PostgreSQL Primary (Core Service DB) ---
+  psp-core-db-primary:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: psp_core_db
+    command: >
+      postgres
+        -c wal_level=replica
+        -c max_wal_senders=10
+        -c max_replication_slots=10
+        -c shared_buffers=256MB
+        -c effective_cache_size=1GB
+    volumes:
+      - psp_core_data_primary:/var/lib/postgresql/data
+      - ./init-replication.sh:/docker-entrypoint-initdb.d/01-init-replication.sh
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+
+  # --- PostgreSQL Replica (Core Service DB) ---
+  psp-core-db-replica:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      PGPASSWORD: replicate
+    entrypoint: >
+      bash -c "
+        until pg_isready -h psp-core-db-primary -U postgres; do sleep 2; done;
+        rm -rf /var/lib/postgresql/data/*;
+        pg_basebackup -h psp-core-db-primary -U replicator -D /var/lib/postgresql/data -Fp -Xs -R;
+        chown -R postgres:postgres /var/lib/postgresql;
+        chmod 700 /var/lib/postgresql/data;
+        exec su-exec postgres postgres
+      "
+    volumes:
+      - psp_core_data_replica:/var/lib/postgresql/data
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+
+  # --- PostgreSQL Primary (Bank Service DB) ---
+  bank-db-primary:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: bank_db
+    command: >
+      postgres
+        -c wal_level=replica
+        -c max_wal_senders=10
+        -c max_replication_slots=10
+        -c shared_buffers=256MB
+        -c effective_cache_size=1GB
+    volumes:
+      - bank_data_primary:/var/lib/postgresql/data
+      - ./init-replication.sh:/docker-entrypoint-initdb.d/01-init-replication.sh
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+
+  # --- PostgreSQL Replica (Bank Service DB) ---
+  bank-db-replica:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      PGPASSWORD: replicate
+    entrypoint: >
+      bash -c "
+        until pg_isready -h bank-db-primary -U postgres; do sleep 2; done;
+        rm -rf /var/lib/postgresql/data/*;
+        pg_basebackup -h bank-db-primary -U replicator -D /var/lib/postgresql/data -Fp -Xs -R;
+        chown -R postgres:postgres /var/lib/postgresql;
+        chmod 700 /var/lib/postgresql/data;
+        exec su-exec postgres postgres
+      "
+    volumes:
+      - bank_data_replica:/var/lib/postgresql/data
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+
+  # --- PostgreSQL Primary (Card Service DB) ---
+  psp-card-db-primary:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: psp_card_db
+    command: >
+      postgres
+        -c wal_level=replica
+        -c max_wal_senders=10
+        -c max_replication_slots=10
+        -c shared_buffers=256MB
+        -c effective_cache_size=1GB
+    volumes:
+      - psp_card_data_primary:/var/lib/postgresql/data
+      - ./init-replication.sh:/docker-entrypoint-initdb.d/01-init-replication.sh
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+
+  # --- PostgreSQL Replica (Card Service DB) ---
+  psp-card-db-replica:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      PGPASSWORD: replicate
+    entrypoint: >
+      bash -c "
+        until pg_isready -h psp-card-db-primary -U postgres; do sleep 2; done;
+        rm -rf /var/lib/postgresql/data/*;
+        pg_basebackup -h psp-card-db-primary -U replicator -D /var/lib/postgresql/data -Fp -Xs -R;
+        chown -R postgres:postgres /var/lib/postgresql;
+        chmod 700 /var/lib/postgresql/data;
+        exec su-exec postgres postgres
+      "
+    volumes:
+      - psp_card_data_replica:/var/lib/postgresql/data
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+
+  # --- RabbitMQ Message Broker ---
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+      RABBITMQ_DEFAULT_VHOST: /
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+
+  # --- PayPal MongoDB ---
+  paypal-mongo-db:
+    image: mongo:6.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - paypal_data:/data/db
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+
+  # --- Crypto MongoDB ---
+  crypto-mongo-db:
+    image: mongo:6.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - crypto_data:/data/db
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+
+  # --- Nginx Load Balancer (HTTPS Termination) ---
+  nginx-lb:
+    image: nginx:alpine
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx-swarm.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+
+  # ============================================================
+  # NODE 2 (Worker) - APPLICATION LAYER
+  # ============================================================
+
+  # --- Core Service ---
+  core-service:
+    image: ${REGISTRY:-localhost:5000}/psp-core-service:latest
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://psp-core-db-primary:5432/psp_core_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: super
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+      PSP_DISABLE_AUTH: "true"
+      PSP_FRONTEND_URL: "https://localhost"
+      RESILIENCE4J_CIRCUITBREAKER_ENABLED: "true"
+      RESILIENCE4J_RETRY_ENABLED: "true"
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 2
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+
+  # --- Bank Service ---
+  bank-service:
+    image: ${REGISTRY:-localhost:5000}/psp-bank-service:latest
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://bank-db-primary:5432/bank_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: super
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+      PSP_FRONTEND_URL: "https://localhost"
+      RESILIENCE4J_CIRCUITBREAKER_ENABLED: "true"
+      RESILIENCE4J_RETRY_ENABLED: "true"
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 2
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+
+  # --- Card Service ---
+  card-service:
+    image: ${REGISTRY:-localhost:5000}/psp-card-service:latest
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://psp-card-db-primary:5432/psp_card_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: super
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+      RESILIENCE4J_CIRCUITBREAKER_ENABLED: "true"
+      RESILIENCE4J_RETRY_ENABLED: "true"
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 2
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+
+  # --- PayPal Service ---
+  paypal-service:
+    image: ${REGISTRY:-localhost:5000}/psp-paypal-service:latest
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:password@paypal-mongo-db:27017/paypal_db?authSource=admin
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+      PSP_FRONTEND_URL: "https://localhost"
+      RESILIENCE4J_CIRCUITBREAKER_ENABLED: "true"
+      RESILIENCE4J_RETRY_ENABLED: "true"
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+
+  # --- Crypto Service ---
+  crypto-service:
+    image: ${REGISTRY:-localhost:5000}/psp-crypto-service:latest
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:password@crypto-mongo-db:27017/psp_crypto_db?authSource=admin
+      RESILIENCE4J_CIRCUITBREAKER_ENABLED: "true"
+      RESILIENCE4J_RETRY_ENABLED: "true"
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+
+  # --- API Gateway ---
+  api-gateway:
+    image: ${REGISTRY:-localhost:5000}/psp-api-gateway:latest
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: user
+      RABBITMQ_PASSWORD: password
+      CORE_SERVICE_URL: http://core-service:8080
+      BANK_SERVICE_URL: http://bank-service:8080
+      CARD_SERVICE_URL: http://card-service:8080
+      PAYPAL_SERVICE_URL: http://paypal-service:8080
+      CRYPTO_SERVICE_URL: http://crypto-service:8080
+      RESILIENCE4J_CIRCUITBREAKER_ENABLED: "true"
+      RESILIENCE4J_RETRY_ENABLED: "true"
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 2
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+
+  # --- Web Shop Frontend ---
+  web-shop:
+    image: ${REGISTRY:-localhost:5000}/psp-web-shop:latest
+    environment:
+      API_URL: http://nginx-lb/api
+    networks:
+      - psp-overlay
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+
+# =============================================================================
+# VOLUMES (created on each node as needed)
+# =============================================================================
+volumes:
+  psp_core_data_primary:
+  psp_core_data_replica:
+  bank_data_primary:
+  bank_data_replica:
+  psp_card_data_primary:
+  psp_card_data_replica:
+  paypal_data:
+  crypto_data:
+  rabbitmq_data:
+
+# =============================================================================
+# ENCRYPTED OVERLAY NETWORK
+# =============================================================================
+# The 'encrypted' option enables IPsec encryption for ALL traffic between
+# nodes on this network. This satisfies the secure communication requirement.
+# =============================================================================
+networks:
+  psp-overlay:
+    driver: overlay
+    driver_opts:
+      encrypted: "true"
+    attachable: true
