@@ -36,7 +36,7 @@ func syncUserModel() error {
 			if err := migrator.AddColumn(&models.User{}, field); err != nil {
 				return err
 			}
-			log.Printf("Dodata kolona u Users tabelu: %s", field)
+			log.Printf("Added column to Users table: %s", field)
 		}
 	}
 	return nil
@@ -64,32 +64,32 @@ func startPaymentSweeper() {
 			<-ticker.C
 		}
 	}()
-	log.Printf("Payment sweeper pokrenut (interval %s, prag %s)", interval, orphanThreshold)
+	log.Printf("Payment sweeper started (interval %s, threshold %s)", interval, orphanThreshold)
 }
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Println("Napomena: .env fajl nije pronađen, koriste se postojeće env varijable.")
+		log.Println("Note: .env file not found, using existing environment variables.")
 	}
 
 	if err := config.InitDB(); err != nil {
-		log.Fatalf("Nije moguće povezati se sa bazom: %v", err)
+		log.Fatalf("Could not connect to database: %v", err)
 	}
 
 	if err := syncUserModel(); err != nil {
-		log.Fatalf("Sinhronizacija User modela nije uspela: %v", err)
+		log.Fatalf("User model sync failed: %v", err)
 	}
 	if err := syncPaymentModel(); err != nil {
-		log.Fatalf("Sinhronizacija Payment modela nije uspela: %v", err)
+		log.Fatalf("Payment model sync failed: %v", err)
 	}
-	log.Println("Svi modeli su uspešno sinhronizovani.")
+	log.Println("All models synced successfully.")
 
 	if err := config.SeedDatabase(); err != nil {
-		log.Fatalf("Seed podataka nije uspela: %v", err)
+		log.Fatalf("Database seed failed: %v", err)
 	}
 
 	if err := config.InitBlockchain(); err != nil {
-		log.Printf("UPOZORENJE: Blockchain nije dostupan (%v). Treasury endpoint-i neće raditi.", err)
+		log.Printf("WARNING: Blockchain unavailable (%v). Treasury endpoints will not work.", err)
 	}
 
 	startPaymentSweeper()
@@ -112,10 +112,10 @@ func main() {
 		port = "5000"
 	}
 
-	log.Printf("Server sluša na portu %s", port)
-	log.Printf("Swagger dokumentacija je dostupna na http://localhost:%s/api-docs", port)
+	log.Printf("Server listening on port %s", port)
+	log.Printf("Swagger docs available at http://localhost:%s/api-docs", port)
 
 	if err := r.Run(":" + port); err != nil {
-		log.Fatalf("Server prekinut: %v", err)
+		log.Fatalf("Server stopped: %v", err)
 	}
 }

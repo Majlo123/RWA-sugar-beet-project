@@ -11,8 +11,8 @@ import (
 func GetAnalytics(c *gin.Context) {
 	data, err := services.GetAdminAnalytics()
 	if err != nil {
-		log.Printf("Greška pri dohvatanju analitike: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Došlo je do greške na serveru."})
+		log.Printf("Error fetching analytics: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "A server error occurred."})
 		return
 	}
 	c.JSON(http.StatusOK, data)

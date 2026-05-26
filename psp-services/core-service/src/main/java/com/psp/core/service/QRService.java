@@ -18,15 +18,15 @@ public class QRService {
     public Map<String, String> generateIPSQRCode(Transaction transaction) throws Exception {
         String amountFormatted = String.format("%.2f", transaction.getAmount()).replace(".", ",");
         
-        // NBS IPS Standardni format (Stavka 1.2 specifikacije)
+        // NBS IPS standard format (Item 1.2 of the spec).
         String ipsString = String.format(
             "K:PR|V:01|C:1|R:%s|N:%s|I:RSD%s|SF:%s|S:%s|RO:%s",
-            "265000000012345678",      // Račun prodavca
-            "Rent-A-Car Agency DOO",   // Naziv prodavca
-            amountFormatted,           // Iznos
-            "289",                     // Šifra plaćanja
-            "Placanje po transakciji", // Svrha
-            transaction.getId()        // Poziv na broj
+            "265000000012345678",      // Merchant account
+            "Rent-A-Car Agency DOO",   // Merchant name
+            amountFormatted,           // Amount
+            "289",                     // Payment code
+            "Per-transaction payment", // Purpose
+            transaction.getId()        // Reference number
         );
 
         QRCodeWriter qrCodeWriter = new QRCodeWriter();

@@ -8,8 +8,8 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 /**
- * PCI DSS 3.5 - AES-256-GCM enkripcija za osetljive podatke
- * Koristi se za enkripciju API ključeva, tokena i drugih osetljivih podataka
+ * PCI DSS 3.5 - AES-256-GCM encryption for sensitive data.
+ * Used for encrypting API keys, tokens and other sensitive payloads.
  */
 public class AesEncryption {
 
@@ -17,7 +17,7 @@ public class AesEncryption {
     private static final int GCM_IV_LENGTH = 12;
     private static final int GCM_TAG_LENGTH = 128;
     
-    // Ključ se čita iz environment varijable ili koristi default za dev
+    // Key is read from an environment variable; falls back to a dev default.
     private static final String DEFAULT_KEY = "PCI_DSS_AES256_KEY_CHANGE_IN_PROD";
     
     private final SecretKeySpec secretKey;
@@ -28,7 +28,7 @@ public class AesEncryption {
     }
 
     public AesEncryption(String key) {
-        // Osiguraj da ključ ima 32 bajta za AES-256
+        // Ensure the key is 32 bytes for AES-256.
         byte[] keyBytes = padKey(key);
         this.secretKey = new SecretKeySpec(keyBytes, "AES");
         this.secureRandom = new SecureRandom();
@@ -47,9 +47,9 @@ public class AesEncryption {
     }
 
     /**
-     * Enkriptuje plaintext koristeći AES-256-GCM
-     * @param plaintext Tekst za enkripciju
-     * @return Base64 enkodiran string (IV + ciphertext + auth tag)
+     * Encrypt plaintext using AES-256-GCM.
+     * @param plaintext Text to encrypt
+     * @return Base64-encoded string (IV + ciphertext + auth tag)
      */
     public String encrypt(String plaintext) {
         if (plaintext == null || plaintext.isEmpty()) {
@@ -66,7 +66,7 @@ public class AesEncryption {
 
             byte[] cipherText = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
 
-            // Kombinuj IV i ciphertext
+            // Concatenate IV and ciphertext.
             byte[] encrypted = new byte[iv.length + cipherText.length];
             System.arraycopy(iv, 0, encrypted, 0, iv.length);
             System.arraycopy(cipherText, 0, encrypted, iv.length, cipherText.length);
@@ -78,9 +78,9 @@ public class AesEncryption {
     }
 
     /**
-     * Dekriptuje ciphertext enkriptovan sa encrypt() metodom
-     * @param encryptedText Base64 enkodiran enkriptovani string
-     * @return Dekriptovan plaintext
+     * Decrypt ciphertext produced by encrypt().
+     * @param encryptedText Base64-encoded encrypted string
+     * @return Decrypted plaintext
      */
     public String decrypt(String encryptedText) {
         if (encryptedText == null || encryptedText.isEmpty()) {
@@ -90,11 +90,11 @@ public class AesEncryption {
         try {
             byte[] decoded = Base64.getDecoder().decode(encryptedText);
 
-            // Ekstrakuj IV
+            // Extract IV.
             byte[] iv = new byte[GCM_IV_LENGTH];
             System.arraycopy(decoded, 0, iv, 0, iv.length);
 
-            // Ekstrakuj ciphertext
+            // Extract ciphertext.
             byte[] cipherText = new byte[decoded.length - iv.length];
             System.arraycopy(decoded, iv.length, cipherText, 0, cipherText.length);
 

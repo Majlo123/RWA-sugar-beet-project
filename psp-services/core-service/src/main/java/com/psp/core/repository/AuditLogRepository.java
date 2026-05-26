@@ -14,28 +14,28 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * PCI DSS 10.5 - Repository za sigurno čuvanje audit logova
+ * PCI DSS 10.5 - Repository for secure audit log storage.
  */
 @Repository
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
     /**
-     * Pronađi sve logove za određenog aktera
+     * Find all logs for a given actor.
      */
     List<AuditLog> findByActorOrderByTimestampDesc(String actor);
 
     /**
-     * Pronađi sve logove za određeni resurs
+     * Find all logs for a given resource.
      */
     List<AuditLog> findByResourceIdOrderByTimestampDesc(String resourceId);
 
     /**
-     * Pronađi logove po tipu akcije
+     * Find logs by action type.
      */
     List<AuditLog> findByActionTypeOrderByTimestampDesc(AuditActionType actionType);
 
     /**
-     * Pronađi logove u vremenskom opsegu
+     * Find logs within a time range.
      */
     @Query("SELECT a FROM AuditLog a WHERE a.timestamp BETWEEN :start AND :end ORDER BY a.timestamp DESC")
     List<AuditLog> findByTimestampRange(
@@ -44,7 +44,7 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     );
 
     /**
-     * Pronađi neuspešne pokušaje pristupa za određenog aktera
+     * Find failed access attempts for a given actor.
      */
     @Query("SELECT a FROM AuditLog a WHERE a.actor = :actor AND a.outcome IN ('FAILURE', 'ACCESS_DENIED') " +
            "AND a.timestamp > :since ORDER BY a.timestamp DESC")
@@ -54,19 +54,19 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     );
 
     /**
-     * Pronađi sve pristupe podacima kartice
+     * Find all accesses to card data.
      */
     @Query("SELECT a FROM AuditLog a WHERE a.actionType IN ('CARD_DATA_ACCESS', 'CARD_DATA_VIEWED', 'CARD_PAYMENT_PROCESSED') " +
            "AND a.timestamp > :since ORDER BY a.timestamp DESC")
     List<AuditLog> findCardDataAccess(@Param("since") Instant since);
 
     /**
-     * Straničenje za UI prikaz audit logova
+     * Pagination for UI audit-log display.
      */
     Page<AuditLog> findAllByOrderByTimestampDesc(Pageable pageable);
 
     /**
-     * Pretraži po više kriterijuma
+     * Search by multiple criteria.
      */
     @Query("SELECT a FROM AuditLog a WHERE " +
            "(:actor IS NULL OR a.actor = :actor) AND " +
@@ -86,15 +86,15 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     );
 
     /**
-     * Broji neuspešne pokušaje prijave za određenu IP adresu u poslednjih N minuta
-     * Za detekciju brute force napada
+     * Count failed login attempts from a given IP address in the last N minutes.
+     * Used to detect brute-force attacks.
      */
     @Query("SELECT COUNT(a) FROM AuditLog a WHERE a.clientIp = :ip AND " +
            "a.actionType = 'LOGIN_FAILURE' AND a.timestamp > :since")
     long countFailedLoginsByIp(@Param("ip") String ip, @Param("since") Instant since);
 
     /**
-     * Statistika za dashboard
+     * Statistics for the dashboard.
      */
     @Query("SELECT a.actionType, COUNT(a) FROM AuditLog a WHERE a.timestamp > :since " +
            "GROUP BY a.actionType ORDER BY COUNT(a) DESC")

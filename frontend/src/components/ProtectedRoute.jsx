@@ -1,11 +1,11 @@
 import { Navigate, Outlet } from 'react-router-dom';
 
 function ProtectedRoute() {
-  // Proveravamo da li token postoji u Local Storage-u
+  // Check whether a token exists in localStorage.
   const token = localStorage.getItem('token');
 
-  // Ako token postoji, dozvoli pristup stranici (prikaži Outlet)
-  // Ako ne postoji, preusmeri korisnika na /login
+  // If a token exists, render the protected page (Outlet); otherwise
+  // redirect the user to /login.
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 }
 

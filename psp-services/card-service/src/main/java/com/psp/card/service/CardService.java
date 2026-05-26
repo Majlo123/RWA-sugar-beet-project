@@ -23,9 +23,9 @@ public class CardService {
             Map<String, String> updateRequest = new HashMap<>();
             updateRequest.put("method", "CARD");
             restTemplate.put(CORE_SERVICE_UPDATE_URL + pspTransactionId, updateRequest);
-            System.out.println("✅ CORE: Metoda CARD upisana za ID: " + pspTransactionId);
+            System.out.println("✅ CORE: CARD method recorded for ID: " + pspTransactionId);
         } catch (Exception e) {
-            System.out.println("⚠️ CORE ERROR: Neuspešan upis metode: " + e.getMessage());
+            System.out.println("⚠️ CORE ERROR: Failed to record payment method: " + e.getMessage());
         }
     }
 

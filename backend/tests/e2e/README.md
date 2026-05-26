@@ -1,36 +1,36 @@
-# Backend E2E testovi
+# Backend E2E tests
 
-Playwright test suite koja verifikuje da Go bekend (port 5000) ispunjava isti API contract kao stari Node bekend. Pokriva sve endpoint-e: register, login, profile, token-price, record-investment, admin/analytics, plus Swagger UI.
+Playwright test suite that verifies the Go backend (port 5000) fulfils the same API contract as the legacy Node backend. Covers every endpoint: register, login, profile, token-price, record-investment, admin/analytics, plus the Swagger UI.
 
-## Preduslovi
+## Prerequisites
 
-1. **Go bekend mora da radi** na portu 5000 — pokreni iz `backend/`:
+1. **The Go backend must be running** on port 5000 — start it from `backend/`:
    ```bash
    go run ./cmd/server
    ```
-   U logu treba da vidiš:
-   - `Konekcija sa bazom podataka je uspešno uspostavljena.`
-   - `Svi modeli su uspešno sinhronizovani.`
-   - `Povezan na Treasury ugovor na adresi: ...`
-   - `Server sluša na portu 5000`
+   In the logs you should see:
+   - `Database connection successfully established.`
+   - `All models synced successfully.`
+   - `Connected to Treasury contract at address: ...`
+   - `Server listening on port 5000`
 
-2. **PostgreSQL** mora da radi lokalno sa bazom `sugar_beet_db` (kredencijali u `backend/.env`).
+2. **PostgreSQL** must be running locally with database `sugar_beet_db` (credentials in `backend/.env`).
 
-3. **Internet** — `/token-price` test poziva Sepolia RPC preko `ethers` ugovora.
+3. **Internet** — the `/token-price` test calls the Sepolia RPC through the `ethers` contract.
 
-4. **Admin korisnik (opciono)** — za pokretanje admin happy-path testova (`/admin/analytics` 200 i `/record-investment` admin scenariji), potrebno je da postoji korisnik sa `role='admin'` u DB-u i da postave env varijable:
+4. **Admin user (optional)** — to run the admin happy-path tests (`/admin/analytics` 200 and `/record-investment` admin scenarios), an account with `role='admin'` must exist in the DB and the following env vars must be set:
    ```bash
    # PowerShell (Windows)
    $env:ADMIN_USERNAME = "admin"
-   $env:ADMIN_PASSWORD = "lozinka"
+   $env:ADMIN_PASSWORD = "password"
    npm run test:e2e
 
    # bash (Linux/Mac)
-   ADMIN_USERNAME=admin ADMIN_PASSWORD=lozinka npm run test:e2e
+   ADMIN_USERNAME=admin ADMIN_PASSWORD=password npm run test:e2e
    ```
-   Admin se kreira ručno (nema endpoint za promociju): registruj normalnog korisnika preko `/auth/register`, pa update u DB-u: `UPDATE "Users" SET role='admin' WHERE username='admin';`. Ako env vars nisu postavljene, admin happy path testovi se preskaču (skip), ali 401/403 testovi se i dalje izvršavaju.
+   The admin is created manually (there is no promotion endpoint): register a normal user via `/auth/register`, then update the DB: `UPDATE "Users" SET role='admin' WHERE username='admin';`. If the env vars are not set, the admin happy-path tests are skipped, but the 401/403 tests still run.
 
-## Instalacija
+## Installation
 
 ```bash
 cd backend/tests/e2e
@@ -38,52 +38,52 @@ npm install
 npx playwright install chromium
 ```
 
-`npx playwright install chromium` je potreban samo za browser test (`swagger.spec.ts`); ako imaš već instaliran Chromium iz drugog Playwright projekta, ovaj korak možeš preskočiti.
+`npx playwright install chromium` is only needed for the browser test (`swagger.spec.ts`); if you already have Chromium installed from another Playwright project, you can skip this step.
 
-## Pokretanje
+## Running
 
 ```bash
 npm run test:e2e          # default: headless, list reporter, HTML report
-npm run test:e2e:headed   # otvara Chromium prozor (vizuelno za swagger.spec.ts)
-npm run test:e2e:ui       # Playwright Test UI mode (interaktivno debagovanje)
-npm run test:e2e:report   # otvori HTML izveštaj posle run-a
+npm run test:e2e:headed   # opens a Chromium window (visual for swagger.spec.ts)
+npm run test:e2e:ui       # Playwright Test UI mode (interactive debugging)
+npm run test:e2e:report   # open the HTML report after a run
 ```
 
-Filtriranje po fajlu / projektu:
+Filtering by file / project:
 ```bash
-npx playwright test auth.spec.ts             # samo auth testovi
-npx playwright test --project=api            # samo API testovi (bez browser-a)
-npx playwright test --project=browser        # samo Swagger UI browser test
+npx playwright test auth.spec.ts             # only auth tests
+npx playwright test --project=api            # only API tests (no browser)
+npx playwright test --project=browser        # only the Swagger UI browser test
 ```
 
-## Šta se testira
+## What is tested
 
-| Fajl | Endpoint | Test scenariji |
+| File | Endpoint | Test scenarios |
 |---|---|---|
 | `auth.spec.ts` | `POST /auth/register`, `POST /auth/login` | happy path (201/200), missing fields, duplicate username, wrong password, non-existing user |
-| `users.spec.ts` | `GET /users/profile` | bez tokena (401), pogrešan format header-a (401), nevalidan token (403), validan token (200, bez password polja) |
-| `treasury.spec.ts` | `GET /token-price`, `POST /record-investment` | token cena (200, string format), bez tokena (401), non-admin token (403), missing fields sa admin tokenom (400), ne-multiplo od 1000 (500), happy path skipovan |
-| `admin.spec.ts` | `GET /admin/analytics` | bez tokena (401), non-admin token (403), nevalidan token (403), happy path sa admin tokenom (200, validacija strukture summary/investments/users) |
-| `swagger.spec.ts` | `GET /api-docs`, `GET /api-docs/swagger.json` | Swagger UI se renderuje u Chromium-u, OpenAPI 3.0 JSON validan |
+| `users.spec.ts` | `GET /users/profile` | no token (401), wrong header format (401), invalid token (403), valid token (200, no password field) |
+| `treasury.spec.ts` | `GET /token-price`, `POST /record-investment` | token price (200, string format), no token (401), non-admin token (403), missing fields with admin token (400), not a multiple of 1000 (500), happy path skipped |
+| `admin.spec.ts` | `GET /admin/analytics` | no token (401), non-admin token (403), invalid token (403), happy path with admin token (200, validates summary/investments/users structure) |
+| `swagger.spec.ts` | `GET /api-docs`, `GET /api-docs/swagger.json` | Swagger UI renders in Chromium, OpenAPI 3.0 JSON is valid |
 
-## Konvencije
+## Conventions
 
-- **Unique username** po test run-u — testovi koriste `testuser_<timestamp>_<random>` da izbegnu konflikte. DB akumulira test korisnike, ali nema cleanup-a.
-- **`workers: 1`** u config-u — sekvencijalno izvršavanje, izbegava race-ove na deljenom DB stanju.
-- **Dva Playwright projekta:**
-  - `api` (default reporter) — auth/users/treasury, koristi `request` fixture, ne pokreće browser
-  - `browser` — `swagger.spec.ts`, otvara Chromium
+- **Unique username** per test run — tests use `testuser_<timestamp>_<random>` to avoid clashes. The DB accumulates test users, but there is no cleanup.
+- **`workers: 1`** in config — sequential execution avoids races on shared DB state.
+- **Two Playwright projects:**
+  - `api` (default reporter) — auth/users/treasury, uses the `request` fixture, does not launch a browser
+  - `browser` — `swagger.spec.ts`, launches Chromium
 
 ## Troubleshooting
 
-| Simptom | Uzrok | Rešenje |
+| Symptom | Cause | Fix |
 |---|---|---|
-| `ECONNREFUSED 127.0.0.1:5000` | Go bekend nije pokrenut | `cd backend && go run ./cmd/server` |
-| `Browser executable not found` | Chromium nije instaliran | `npx playwright install chromium` |
-| `/token-price` test fail (timeout) | Sepolia RPC sporo / blokirano | proveri internet i `SEPOLIA_RPC_URL` u `backend/.env` |
-| `Username is already taken` na duplicate testu prolazi prvi put pa fail-uje drugi | DB ima zaostali test korisnik iz prethodnog run-a sa istim timestamp-om | praktično nemoguće, ali ručno obriši red iz `Users` tabele |
+| `ECONNREFUSED 127.0.0.1:5000` | Go backend not running | `cd backend && go run ./cmd/server` |
+| `Browser executable not found` | Chromium not installed | `npx playwright install chromium` |
+| `/token-price` test failure (timeout) | Sepolia RPC slow / blocked | check the internet connection and `SEPOLIA_RPC_URL` in `backend/.env` |
+| `Username is already taken` on the duplicate test passes once and fails the next | DB has a leftover test user from a previous run with the same timestamp | practically impossible, but manually delete the row from the `Users` table |
 
-## Dalji koraci (van opsega)
+## Out of scope (next steps)
 
-- Performance benchmarking (wrk/bombardier) za poređenje Go vs Node bekenda
-- Cross-version JWT kompatibilnost (token izdat od Node bekenda → verifikovan od Go bekenda)
+- Performance benchmarking (wrk/bombardier) to compare the Go vs Node backend
+- Cross-version JWT compatibility (token issued by the Node backend → verified by the Go backend)

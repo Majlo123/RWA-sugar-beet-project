@@ -4,11 +4,11 @@ import lombok.Data;
 
 @Data
 public class PaymentUrlRequest {
-    private String merchantId;      // ID prodavca
+    private String merchantId;      // Merchant ID
     private Double amount;
     private String currency;
-    private String merchantOrderId; // ID transakcije
+    private String merchantOrderId; // Transaction ID
     private String merchantTimestamp;
-    private String successUrl;      // URL za uspešno plaćanje
-    private String failedUrl;       // URL za neuspešno plaćanje
+    private String successUrl;      // URL for successful payment
+    private String failedUrl;       // URL for failed payment
 }

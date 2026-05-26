@@ -7,7 +7,7 @@ import java.time.format.DateTimeParseException;
 import java.util.regex.Pattern;
 
 /**
- * PCI DSS 6.5 - Validacija i sanitizacija ulaznih podataka
+ * PCI DSS 6.5 - Input validation and sanitization.
  */
 public class PciDssValidator {
 
@@ -18,7 +18,7 @@ public class PciDssValidator {
     private static final Pattern ORDER_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9\\-_]{1,100}$");
 
     /**
-     * Validira CVV/CVC kod
+     * Validate the CVV/CVC code.
      */
     public static ValidationResult validateCvv(String cvv) {
         if (cvv == null || cvv.isEmpty()) {
@@ -31,7 +31,7 @@ public class PciDssValidator {
     }
 
     /**
-     * Validira datum isteka kartice
+     * Validate the card expiry date.
      */
     public static ValidationResult validateExpiryDate(String expiry) {
         if (expiry == null || expiry.isEmpty()) {
@@ -61,7 +61,7 @@ public class PciDssValidator {
     }
 
     /**
-     * Validira PAN korišćenjem Luhn algoritma
+     * Validate PAN using the Luhn algorithm.
      */
     public static ValidationResult validatePan(String pan) {
         if (pan == null || pan.isEmpty()) {
@@ -82,7 +82,7 @@ public class PciDssValidator {
     }
 
     /**
-     * Validira ime vlasnika kartice
+     * Validate the cardholder's name.
      */
     public static ValidationResult validateCardHolder(String cardHolder) {
         if (cardHolder == null || cardHolder.trim().isEmpty()) {
@@ -97,7 +97,7 @@ public class PciDssValidator {
     }
 
     /**
-     * Validira merchant ID
+     * Validate the merchant ID.
      */
     public static ValidationResult validateMerchantId(String merchantId) {
         if (merchantId == null || merchantId.isEmpty()) {
@@ -112,7 +112,7 @@ public class PciDssValidator {
     }
 
     /**
-     * Validira order ID
+     * Validate the order ID.
      */
     public static ValidationResult validateOrderId(String orderId) {
         if (orderId == null || orderId.isEmpty()) {
@@ -127,22 +127,22 @@ public class PciDssValidator {
     }
 
     /**
-     * Sanitizuje string za bezbedno logovanje
+     * Sanitize a string for safe logging.
      */
     public static String sanitizeForLogging(String input) {
         if (input == null) return null;
-        
-        // Maskira sve PAN brojeve
+
+        // Mask any PAN numbers.
         String sanitized = PanMasker.maskAllInText(input);
-        
-        // Ukloni potencijalne CVV vrednosti (3-4 cifre okružene razmakom)
+
+        // Strip potential CVV values (3-4 digits surrounded by spaces).
         sanitized = sanitized.replaceAll("\\b\\d{3,4}\\b", "***");
-        
+
         return sanitized;
     }
 
     /**
-     * Kompletna validacija kartičnih podataka
+     * Full validation of card data.
      */
     public static ValidationResult validateCardData(String pan, String expiry, String cvv, String cardHolder) {
         ValidationResult panResult = validatePan(pan);
@@ -163,7 +163,7 @@ public class PciDssValidator {
     }
 
     /**
-     * Rezultat validacije
+     * Validation result.
      */
     public static class ValidationResult {
         private final boolean valid;

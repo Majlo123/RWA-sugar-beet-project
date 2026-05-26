@@ -1,14 +1,15 @@
 # ============================================================================
 # RWA Sugar Beet — unified development stack
 #
-# Sadrži:
-#   - BEET aplikaciju (Go backend + React frontend + PostgreSQL)
-#   - PSP (Payment Service Provider) mikroservise iz e2_sep_tim07 projekta
-#     core / bank / card / paypal / crypto + api-gateway + RabbitMQ + 4 baze
+# Contains:
+#   - BEET application (Go backend + React frontend + PostgreSQL)
+#   - PSP (Payment Service Provider) microservices from the e2_sep_tim07
+#     project: core / bank / card / paypal / crypto + api-gateway
+#     + RabbitMQ + 4 databases
 #
-# Pokretanje:   docker compose up --build
-# Zaustavljanje: docker compose down
-# Brisanje volumes: docker compose down -v
+# Start:    docker compose up --build
+# Stop:     docker compose down
+# Wipe volumes: docker compose down -v
 # ============================================================================
 
 services:

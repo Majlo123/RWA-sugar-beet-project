@@ -18,42 +18,42 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Podaci za autentifikaciju i osnovni detalji
+    // Authentication data and core details.
     private String merchantId;
     private Double amount;
     private String currency;
     private String merchantOrderId;
     private LocalDateTime merchantTimestamp;
-    
-    // Statusi i metodi (CARD, QR, itd.)
+
+    // Statuses and methods (CARD, QR, etc.).
     @JsonProperty("paymentMethod")
     private String paymentMethod;
     private String status; // CREATED, PAID, FAILED, ERROR
-    private String reason; // Razlog odbijanja (npr. INVALID_CVV)
-    
-    // Bankarski podaci za praćenje
-    private String stan; 
+    private String reason; // Reason for rejection (e.g., INVALID_CVV)
+
+    // Banking trace data.
+    private String stan;
     private LocalDateTime pspTimestamp;
-    private String globalTransactionId; 
+    private String globalTransactionId;
     private LocalDateTime acquirerTimestamp;
 
-    // OSETLJIVI PODACI - MORAJU BITI @Transient
-    @Transient 
+    // SENSITIVE DATA - MUST BE @Transient.
+    @Transient
     private String cardHolder;
-    
+
     @Transient
     private String pan;
-    
+
     @Transient
     private String expiryDate;
-    
+
     @Transient
     private String cvv;
 
-    @Transient 
+    @Transient
     private String merchantPassword;
 
-    // URL-ovi za navigaciju
+    // Navigation URLs.
     private String successUrl;
     private String failedUrl;
     private String errorUrl;

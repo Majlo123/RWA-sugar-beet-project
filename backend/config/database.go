@@ -35,6 +35,6 @@ func InitDB() error {
 	}
 
 	DB = db
-	log.Println("Konekcija sa bazom podataka je uspešno uspostavljena.")
+	log.Println("Database connection successfully established.")
 	return nil
 }

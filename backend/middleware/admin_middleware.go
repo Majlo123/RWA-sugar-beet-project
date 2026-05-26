@@ -12,20 +12,20 @@ func AdminMiddleware() gin.HandlerFunc {
 		val, exists := c.Get("user")
 		if !exists {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"message": "Autorizacija neuspešna: Token nije priložen.",
+				"message": "Authorization failed: Token not provided.",
 			})
 			return
 		}
 		claims, ok := val.(*services.CustomClaims)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"message": "Greška na serveru.",
+				"message": "Server error.",
 			})
 			return
 		}
 		if claims.Role != "admin" {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"message": "Pristup odbijen: Potrebne su admin privilegije.",
+				"message": "Access denied: Admin privileges required.",
 			})
 			return
 		}

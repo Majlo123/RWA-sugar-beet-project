@@ -15,7 +15,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"message": "Autorizacija neuspešna: Token nije priložen.",
+				"message": "Authorization failed: Token not provided.",
 			})
 			return
 		}
@@ -30,7 +30,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		})
 		if err != nil || !token.Valid {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"message": "Autorizacija neuspešna: Token nije validan.",
+				"message": "Authorization failed: Token is not valid.",
 			})
 			return
 		}

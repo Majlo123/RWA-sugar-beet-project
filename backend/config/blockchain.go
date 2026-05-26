@@ -66,6 +66,6 @@ func InitBlockchain() error {
 	ContractAddress = contractAddr
 	TreasuryABI = parsedABI
 
-	log.Printf("Povezan na Treasury ugovor na adresi: %s", contractAddrHex)
+	log.Printf("Connected to Treasury contract at address: %s", contractAddrHex)
 	return nil
 }

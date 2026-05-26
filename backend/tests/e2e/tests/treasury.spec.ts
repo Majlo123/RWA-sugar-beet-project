@@ -21,7 +21,7 @@ test.describe('POST /record-investment', () => {
     });
     expect(res.status()).toBe(401);
     expect((await res.json()).message).toBe(
-      'Autorizacija neuspešna: Token nije priložen.',
+      'Authorization failed: Token not provided.',
     );
   });
 
@@ -33,7 +33,7 @@ test.describe('POST /record-investment', () => {
     });
     expect(res.status()).toBe(403);
     expect((await res.json()).message).toBe(
-      'Pristup odbijen: Potrebne su admin privilegije.',
+      'Access denied: Admin privileges required.',
     );
   });
 
@@ -49,7 +49,7 @@ test.describe('POST /record-investment', () => {
     });
     expect(res.status()).toBe(400);
     expect((await res.json()).error).toBe(
-      'Potrebno je uneti adresu investitora i iznos.',
+      'Investor address and amount are required.',
     );
   });
 
@@ -64,7 +64,7 @@ test.describe('POST /record-investment', () => {
       data: { investorAddress: randomEthAddress(), amountUSD: 1500 },
     });
     expect(res.status()).toBe(500);
-    expect((await res.json()).error).toBe('Došlo je do greške na serveru.');
+    expect((await res.json()).error).toBe('A server error occurred.');
   });
 
   test.skip('happy path: 200 with txHash', async () => {

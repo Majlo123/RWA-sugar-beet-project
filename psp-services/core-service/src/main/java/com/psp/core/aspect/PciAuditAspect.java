@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 /**
- * PCI DSS 10.2 - AOP Aspect za automatsko audit logovanje
+ * PCI DSS 10.2 - AOP aspect for automatic audit logging.
  */
 @Aspect
 @Component
@@ -28,33 +28,33 @@ public class PciAuditAspect {
     }
 
     /**
-     * Pointcut za sve metode u kontrolerima
+     * Pointcut for all controller methods.
      */
     @Pointcut("within(com.psp.core.controller..*)")
     public void controllerMethods() {}
 
     /**
-     * Pointcut za sve metode koje rukuju plaćanjima
+     * Pointcut for all payment-handling methods.
      */
     @Pointcut("execution(* com.psp.core.service.*Service.*(..))")
     public void serviceMethods() {}
 
     /**
-     * Pointcut za metode koje pristupaju transakcijama
+     * Pointcut for methods that access transactions.
      */
     @Pointcut("execution(* com.psp.core.service.TransactionService.*(..)) || " +
               "execution(* com.psp.core.controller.TransactionController.*(..))")
     public void transactionMethods() {}
 
     /**
-     * Pointcut za merchant operacije
+     * Pointcut for merchant operations.
      */
     @Pointcut("execution(* com.psp.core.service.MerchantService.*(..)) || " +
               "execution(* com.psp.core.controller.MerchantController.*(..))")
     public void merchantMethods() {}
 
     /**
-     * Automatsko logovanje svih merchant operacija
+     * Automatic logging of all merchant operations.
      */
     @Around("merchantMethods()")
     public Object auditMerchantOperations(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -85,7 +85,7 @@ public class PciAuditAspect {
     }
 
     /**
-     * Automatsko logovanje svih transaction operacija
+     * Automatic logging of all transaction operations.
      */
     @Around("transactionMethods()")
     public Object auditTransactionOperations(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -115,7 +115,7 @@ public class PciAuditAspect {
     }
 
     /**
-     * Određuje tip akcije na osnovu imena metode
+     * Determine the action type based on the method name.
      */
     private AuditActionType determineActionType(String methodName, String domain) {
         String lowerMethod = methodName.toLowerCase();
@@ -150,33 +150,33 @@ public class PciAuditAspect {
     }
 
     /**
-     * Sanitizuje argumente da ne sadrže osetljive podatke
+     * Sanitize arguments so they do not contain sensitive data.
      */
     private String sanitizeArguments(Object[] args) {
         if (args == null || args.length == 0) {
             return "[]";
         }
-        
+
         return Arrays.stream(args)
             .map(arg -> {
                 if (arg == null) return "null";
                 String str = arg.toString();
-                // Maskira sve PAN brojeve
+                // Mask any PAN numbers.
                 return PanMasker.maskAllInText(str);
             })
             .collect(Collectors.joining(", ", "[", "]"));
     }
 
     /**
-     * Ekstrahuje actor (merchant ID) iz argumenata
+     * Extract the actor (merchant ID) from the arguments.
      */
     private String extractActor(Object[] args) {
         if (args == null) return "SYSTEM";
-        
+
         for (Object arg : args) {
             if (arg instanceof String) {
                 String str = (String) arg;
-                // Ako izgleda kao merchant ID
+                // If it looks like a merchant ID.
                 if (str.matches("[a-zA-Z0-9\\-_]{3,50}")) {
                     return str;
                 }
@@ -186,10 +186,10 @@ public class PciAuditAspect {
     }
 
     /**
-     * Ekstrahuje resource ID iz rezultata ili argumenata
+     * Extract the resource ID from the result or the arguments.
      */
     private String extractResourceId(Object result, Object[] args) {
-        // Pokušaj iz rezultata
+        // Try from the result.
         if (result != null) {
             try {
                 var idMethod = result.getClass().getMethod("getId");
@@ -204,7 +204,7 @@ public class PciAuditAspect {
             } catch (Exception ignored) {}
         }
         
-        // Pokušaj iz argumenata
+        // Try from the arguments.
         if (args != null && args.length > 0) {
             if (args[0] instanceof String) return (String) args[0];
             if (args[0] instanceof Long) return args[0].toString();

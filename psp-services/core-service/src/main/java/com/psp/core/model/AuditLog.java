@@ -8,15 +8,15 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * PCI DSS 10.2 - Audit log za praćenje svih sigurnosno relevantnih događaja
- * 
- * Req 10.2.1 - Pristup podacima vlasnika kartice
- * Req 10.2.2 - Sve akcije pojedinaca sa root/admin pristupom
- * Req 10.2.3 - Pristup svim audit tragovima
- * Req 10.2.4 - Nevalidni logički pristupi
- * Req 10.2.5 - Korišćenje i promene identifikacionih mehanizama
- * Req 10.2.6 - Inicijalizacija, zaustavljanje ili pauziranje audit logova
- * Req 10.2.7 - Kreiranje i brisanje sistemskih objekata
+ * PCI DSS 10.2 - Audit log for tracking all security-relevant events.
+ *
+ * Req 10.2.1 - Access to cardholder data
+ * Req 10.2.2 - All actions by individuals with root/admin access
+ * Req 10.2.3 - Access to all audit trails
+ * Req 10.2.4 - Invalid logical access attempts
+ * Req 10.2.5 - Use of and changes to identification mechanisms
+ * Req 10.2.6 - Initialization, stopping, or pausing audit logs
+ * Req 10.2.7 - Creation and deletion of system-level objects
  */
 @Entity
 @Table(name = "pci_audit_logs", indexes = {
@@ -34,28 +34,28 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Vreme kada je događaj nastao (PCI DSS 10.3.1) */
+    /** Time the event occurred (PCI DSS 10.3.1) */
     @Column(nullable = false)
     private Instant timestamp;
 
-    /** Ko je izvršio akciju - merchant ID, system, anonymous (PCI DSS 10.3.2) */
+    /** Who performed the action - merchant ID, system, anonymous (PCI DSS 10.3.2) */
     @Column(nullable = false, length = 100)
     private String actor;
 
-    /** Tip akcije (PCI DSS 10.3.3) */
+    /** Action type (PCI DSS 10.3.3) */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private AuditActionType actionType;
 
-    /** ID resursa koji je pogođen - transakcija ID, merchant ID (PCI DSS 10.3.4) */
+    /** ID of the affected resource - transaction ID, merchant ID (PCI DSS 10.3.4) */
     @Column(length = 100)
     private String resourceId;
 
-    /** Tip resursa */
+    /** Resource type */
     @Column(length = 50)
     private String resourceType;
 
-    /** IP adresa klijenta (PCI DSS 10.3.5) */
+    /** Client IP address (PCI DSS 10.3.5) */
     @Column(length = 45)
     private String clientIp;
 
@@ -63,76 +63,76 @@ public class AuditLog {
     @Column(length = 255)
     private String userAgent;
 
-    /** Ishod akcije (PCI DSS 10.3.6) */
+    /** Action outcome (PCI DSS 10.3.6) */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private AuditOutcome outcome;
 
-    /** Razlog neuspeha ako postoji */
+    /** Failure reason, if any */
     @Column(length = 255)
     private String failureReason;
 
-    /** Dodatni sanitizovani detalji (bez osetljivih podataka) */
+    /** Additional sanitized details (no sensitive data) */
     @Column(columnDefinition = "TEXT")
     private String details;
 
-    /** HTTP metoda ako je primenjivo */
+    /** HTTP method, if applicable */
     @Column(length = 10)
     private String httpMethod;
 
-    /** Endpoint koji je pozvan */
+    /** Endpoint that was called */
     @Column(length = 255)
     private String endpoint;
 
-    /** Request ID za korelaciju */
+    /** Request ID for correlation */
     @Column(length = 50)
     private String requestId;
 
-    /** Vreme trajanja operacije u milisekundama */
+    /** Operation duration in milliseconds */
     private Long durationMs;
 
     public enum AuditActionType {
-        // Autentifikacija
+        // Authentication
         LOGIN_ATTEMPT,
         LOGIN_SUCCESS,
         LOGIN_FAILURE,
         LOGOUT,
-        
-        // Pristup podacima kartice
+
+        // Card data access
         CARD_DATA_ACCESS,
         CARD_DATA_VIEWED,
         CARD_PAYMENT_INITIATED,
         CARD_PAYMENT_PROCESSED,
-        
-        // Transakcije
+
+        // Transactions
         TRANSACTION_CREATED,
         TRANSACTION_VIEWED,
         TRANSACTION_UPDATED,
         TRANSACTION_STATUS_CHANGED,
         TRANSACTION_SEARCH,
-        
-        // Merchant operacije
+
+        // Merchant operations
         MERCHANT_REGISTERED,
         MERCHANT_UPDATED,
         MERCHANT_VIEWED,
         MERCHANT_DELETED,
         MERCHANT_SUBSCRIPTION_CHANGED,
-        
-        // Payment method operacije
+
+        // Payment method operations
         PAYMENT_METHOD_SELECTED,
         BANK_PAYMENT_INITIATED,
         PAYPAL_PAYMENT_INITIATED,
         CRYPTO_PAYMENT_INITIATED,
         QR_PAYMENT_INITIATED,
-        
-        // Sigurnosni događaji
+
+        // Security events
         INVALID_ACCESS_ATTEMPT,
         RATE_LIMIT_EXCEEDED,
         VALIDATION_FAILED,
         ENCRYPTION_ERROR,
         DECRYPTION_ERROR,
-        
-        // Sistem
+
+        // System
         SYSTEM_STARTUP,
         SYSTEM_SHUTDOWN,
         CONFIGURATION_CHANGED,
@@ -148,7 +148,7 @@ public class AuditLog {
     }
 
     /**
-     * Builder pattern za lakše kreiranje audit logova
+     * Builder pattern for easier audit-log creation.
      */
     public static AuditLogBuilder builder() {
         return new AuditLogBuilder();

@@ -21,7 +21,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 /**
- * PCI DSS - Servis za upravljanje transakcijama sa audit logovanjem
+ * PCI DSS - Transaction management service with audit logging.
  */
 @Service
 public class TransactionService {
@@ -42,14 +42,14 @@ public class TransactionService {
     private AuditService auditService;
 
     /**
-     * PCI DSS 8.2 - Autentifikacija merchanta korišćenjem sigurnog heširanja
+     * PCI DSS 8.2 - Merchant authentication using secure hashing.
      */
     public Optional<Merchant> authenticateMerchant(String id, String password) {
         return merchantService.authenticateMerchant(id, password);
     }
 
     /**
-     * Kreira početnu transakciju sa audit logovanjem
+     * Create the initial transaction with audit logging.
      */
     @Transactional
     public Transaction createInitialTransaction(PaymentRequest request) {
@@ -74,7 +74,7 @@ public class TransactionService {
 
         Transaction saved = transactionRepository.save(transaction);
 
-        // PCI DSS 3.2 - Kreiraj payment session sa tokenizacijom
+        // PCI DSS 3.2 - Create a tokenized payment session.
         PaymentSession session = new PaymentSession();
         session.setSessionToken(generateSecureToken());
         session.setTransactionId(saved.getId());
@@ -86,14 +86,14 @@ public class TransactionService {
         session.setFailedUrl(request.getFailedUrl());
         session.setErrorUrl(request.getErrorUrl());
         session.setCreatedAt(Instant.now());
-        session.setExpiresAt(Instant.now().plusSeconds(15 * 60)); // 15 minuta
+        session.setExpiresAt(Instant.now().plusSeconds(15 * 60)); // 15 minutes
         session.setIsUsed(false);
         session.setStatus(PaymentSession.SessionStatus.ACTIVE);
         session.setAttemptCount(0);
         
         paymentSessionRepository.save(session);
 
-        // PCI DSS 10.2 - Audit log za kreiranje transakcije
+        // PCI DSS 10.2 - Audit log for transaction creation
         auditService.logTransactionCreated(
             request.getMerchantId(), 
             saved.getId(), 
@@ -105,7 +105,7 @@ public class TransactionService {
     }
 
     /**
-     * Generiši sekuran token za payment sesiju
+     * Generate a secure payment-session token.
      */
     private String generateSecureToken() {
         SecureRandom random = new SecureRandom();
@@ -115,16 +115,16 @@ public class TransactionService {
     }
 
     /**
-     * Ažurira status transakcije sa audit logovanjem
+     * Update the transaction status with audit logging.
      */
     @Transactional
     public boolean updateStatus(String identifier, Map<String, Object> statusUpdate) {
         String cleanId = identifier.trim();
-        
-        // 1. Pokušaj pretrage direktno po merchantOrderId
+
+        // 1. Try a direct lookup by merchantOrderId.
         Transaction transaction = transactionRepository.findByMerchantOrderId(cleanId);
-        
-        // 2. Ako nije nađen, koristi fleksibilnu pretragu
+
+        // 2. If not found, fall back to a flexible lookup.
         if (transaction == null) {
             List<Transaction> all = transactionRepository.findAll();
             transaction = all.stream()
@@ -139,14 +139,14 @@ public class TransactionService {
             String oldStatus = transaction.getStatus();
             String status = (String) statusUpdate.get("status");
             
-            // Logika za PAID / SUCCESS status
+            // Handle PAID / SUCCESS status.
             if ("SUCCESS".equalsIgnoreCase(status) || "PAID".equalsIgnoreCase(status)) {
                 transaction.setStatus("PAID");
                 if (statusUpdate.containsKey("globalTransactionId")) {
                     transaction.setGlobalTransactionId(statusUpdate.get("globalTransactionId").toString());
                 }
-            } 
-            // Logika za FAILED status
+            }
+            // Handle FAILED status.
             else if ("FAILED".equalsIgnoreCase(status)) {
                 transaction.setStatus("FAILED");
                 if (statusUpdate.containsKey("reason")) {
@@ -154,14 +154,14 @@ public class TransactionService {
                 }
             }
 
-            // Ažuriranje vremena ako postoji
+            // Update timestamp if provided.
             if (statusUpdate.containsKey("acquirerTimestamp")) {
                 transaction.setAcquirerTimestamp(LocalDateTime.now());
             }
 
             transactionRepository.saveAndFlush(transaction);
 
-            // PCI DSS 10.2 - Audit log za promenu statusa
+            // PCI DSS 10.2 - Audit log for the status change
             auditService.logTransactionStatusChanged(
                 transaction.getMerchantId(),
                 String.valueOf(transaction.getId()),
@@ -172,13 +172,13 @@ public class TransactionService {
             return true;
         }
 
-        // Log neuspešan pokušaj
+        // Log the failed attempt.
         auditService.logFailure(AuditActionType.TRANSACTION_UPDATED, "SYSTEM", cleanId, "Transaction not found");
         return false;
     }
 
     /**
-     * Ažurira metodu plaćanja sa audit logovanjem
+     * Update the payment method with audit logging.
      */
     @Transactional
     public boolean updatePaymentMethod(Long id, String method) {
@@ -187,7 +187,7 @@ public class TransactionService {
             transaction.setPaymentMethod(method);
             transactionRepository.save(transaction);
             
-            System.out.println("✅ CORE SERVICE: Metoda " + method + " upisana za ID: " + id);
+            System.out.println("✅ CORE SERVICE: method " + method + " saved for ID: " + id);
 
             // PCI DSS 10.2 - Audit log
             auditService.log(AuditActionType.PAYMENT_METHOD_SELECTED, 
@@ -202,7 +202,7 @@ public class TransactionService {
     }
 
     /**
-     * Vraća transakciju po ID-u sa audit logovanjem
+     * Return a transaction by ID with audit logging.
      */
     @Transactional(readOnly = true)
     public Optional<Transaction> getTransactionById(Long id) {
@@ -220,7 +220,7 @@ public class TransactionService {
     }
 
     /**
-     * Vraća sve transakcije sa audit logovanjem
+     * Return all transactions with audit logging.
      */
     @Transactional(readOnly = true)
     public List<Transaction> getAllTransactions() {
@@ -230,7 +230,7 @@ public class TransactionService {
     }
 
     /**
-     * Loguje pristup podacima kartice (za PCI DSS compliance)
+     * Log access to card data (for PCI DSS compliance).
      */
     public void logCardDataAccess(Long transactionId, String pan, String actor) {
         String maskedPan = PanMasker.mask(pan);

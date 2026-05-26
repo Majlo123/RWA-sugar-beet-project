@@ -30,7 +30,7 @@ spring:
               - X-Merchant-Id
             allowCredentials: true
       
-      # Definisanje ruta ka tvojim mikroservisima
+      # Route definitions for the downstream microservices
       routes:
         # Auth routes (public) - handles /auth/* (nginx strips /api prefix)
         - id: auth-service
@@ -48,15 +48,15 @@ spring:
           filters:
             - StripPrefix=0
 
-        # Rute za CORE servis (uključuje transakcije i QR kod)
+        # Routes for the CORE service (includes transactions and QR code)
         - id: core-service
           uri: http://core-service:8080
           predicates:
             - Path=/core/**, /transactions/**, /api/qr/**
           filters:
-            - StripPrefix=1 # Ako Angular šalje /core/transactions, skida "core" i gađa direktno /transactions na 8080
+            - StripPrefix=1 # If Angular sends /core/transactions, strip "core" and hit /transactions directly on 8080
 
-        # Rute za BANK servis
+        # Routes for the BANK service
         - id: bank-service
           uri: http://bank-service:8080
           predicates:
@@ -64,7 +64,7 @@ spring:
           filters:
             - StripPrefix=1
 
-        # Rute za CARD servis
+        # Routes for the CARD service
         - id: card-service
           uri: http://card-service:8080
           predicates:
@@ -72,7 +72,7 @@ spring:
           filters:
             - StripPrefix=1
 
-        # Rute za PAYPAL servis
+        # Routes for the PAYPAL service
         - id: paypal-service
           uri: http://paypal-service:8080
           predicates:
@@ -80,7 +80,7 @@ spring:
           filters:
             - StripPrefix=1
 
-        # Rute za CRYPTO servis
+        # Routes for the CRYPTO service
         - id: crypto-service
           uri: http://crypto-service:8080
           predicates:
@@ -88,7 +88,7 @@ spring:
           filters:
             - StripPrefix=1
 
-# Logovanje za lakši debag tokom odbrane
+# Logging for easier debugging during the thesis defense
 logging:
   level:
     org.springframework.cloud.gateway: TRACE

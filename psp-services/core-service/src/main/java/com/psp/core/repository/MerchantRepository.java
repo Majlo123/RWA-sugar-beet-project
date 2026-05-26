@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MerchantRepository extends JpaRepository<Merchant, String> {
-    // Spring Data JPA već ima metodu findById, to nam je dovoljno
+    // Spring Data JPA already provides findById, which is enough for us.
 }

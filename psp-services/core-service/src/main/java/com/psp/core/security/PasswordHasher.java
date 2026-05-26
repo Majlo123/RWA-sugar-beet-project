@@ -7,8 +7,8 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 /**
- * PCI DSS 8.2.1 - Sigurno heširanje lozinki korišćenjem SHA-256 sa solju
- * Koristi se za heširanje merchant API ključeva
+ * PCI DSS 8.2.1 - Secure password hashing using SHA-256 with a salt.
+ * Used for hashing merchant API keys.
  */
 public class PasswordHasher {
 
@@ -22,8 +22,8 @@ public class PasswordHasher {
     }
 
     /**
-     * Hešira lozinku sa nasumičnom solju
-     * @param password Lozinka za heširanje
+     * Hash a password with a random salt.
+     * @param password Password to hash
      * @return Format: base64(salt):base64(hash)
      */
     public String hash(String password) {
@@ -43,19 +43,19 @@ public class PasswordHasher {
     }
 
     /**
-     * Verifikuje lozinku protiv hešovane vrednosti
-     * @param password Lozinka za proveru
-     * @param storedHash Sačuvani heš u formatu salt:hash
-     * @return true ako se lozinke poklapaju
+     * Verify a password against a hashed value.
+     * @param password Password to check
+     * @param storedHash Stored hash in salt:hash format
+     * @return true if the passwords match
      */
     public boolean verify(String password, String storedHash) {
         if (password == null || storedHash == null) {
             return false;
         }
 
-        // Proveri da li je u starom formatu (plaintext)
+        // Check whether it is in the legacy format (plaintext).
         if (!storedHash.contains(SEPARATOR)) {
-            // Legacy podrška - plaintext poređenje
+            // Legacy support - plaintext comparison.
             return password.equals(storedHash);
         }
 
@@ -71,7 +71,7 @@ public class PasswordHasher {
 
             return MessageDigest.isEqual(expectedHash, actualHash);
         } catch (IllegalArgumentException e) {
-            // Ako dekodiranje ne uspe, probaj plaintext poređenje (legacy)
+            // If decoding fails, try plaintext comparison (legacy).
             return password.equals(storedHash);
         }
     }
@@ -87,7 +87,7 @@ public class PasswordHasher {
     }
 
     /**
-     * Proverava da li je string već hešovan
+     * Return true if the string is already hashed.
      */
     public boolean isHashed(String value) {
         if (value == null) return false;

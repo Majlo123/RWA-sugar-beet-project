@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
-// Importi potrebni za CORS
+// Imports required for CORS
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
@@ -21,38 +21,38 @@ public class ApiGatewayApplication {
         SpringApplication.run(ApiGatewayApplication.class, args);
     }
 
-    // 1. DEFINISANJE RUTA (Rutiranje ka mikroservisima)
+    // 1. ROUTE DEFINITIONS (routing to microservices).
     // Routes are defined in application.yml
     /*
     @Bean
     public RouteLocator myRoutes(RouteLocatorBuilder builder) {
         return builder.routes()
-            // Ruta za Core Service (8081)
+            // Route for Core Service (8081)
             .route("core-service", r -> r.path("/core/**")
                 .filters(f -> f.stripPrefix(1))
                 .uri("http://localhost:8081"))
-            
-            // Ruta za Card Service (8082)
+
+            // Route for Card Service (8082)
             .route("card-service", r -> r.path("/card/**")
                 .filters(f -> f.stripPrefix(1))
                 .uri("http://localhost:8082"))
-                
-            // Ruta za PayPal Service (8083)
+
+            // Route for PayPal Service (8083)
             .route("paypal-service", r -> r.path("/paypal/**")
                 .filters(f -> f.stripPrefix(1))
                 .uri("http://localhost:8083"))
 
-            // --- NOVO: Ruta za Bank Service (Simulator) ---
-            // Svi zahtevi koji idu na /bank/... biće prosleđeni na port 8085
+            // --- NEW: Route for Bank Service (simulator) ---
+            // All requests for /bank/... are forwarded to port 8085.
             .route("bank-service", r -> r.path("/bank/**")
                 .filters(f -> f.stripPrefix(1))
                 .uri("http://localhost:8085"))
-                
+
             .build();
     }
     */
 
-    // 2. CORS KONFIGURACIJA
+    // 2. CORS CONFIGURATION.
     @Bean
     public CorsWebFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();

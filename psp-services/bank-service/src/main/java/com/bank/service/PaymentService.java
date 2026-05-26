@@ -54,7 +54,7 @@ public class PaymentService {
         processedOrders.add(merchantOrderId);
     }
 
-    // --- KLJUČNA IZMENA: Razdvojene validacije sa specifičnim porukama ---
+    // --- KEY CHANGE: split validations with specific error messages. ---
     public String validateCard(String pan, String expiryDate, String cvv) {
         if (cvv == null || !cvv.matches("^[0-9]{3}$")) return "INVALID_CVV";
         if (expiryDate == null || !expiryDate.matches("(0[1-9]|1[0-2])/[0-9]{2}")) return "INVALID_DATE_FORMAT";
@@ -68,14 +68,14 @@ public class PaymentService {
             String coreUrl = "http://core-service:8080/transactions/update-status/" + merchantOrderId;
             Map<String, Object> statusUpdate = new HashMap<>();
             statusUpdate.put("status", status);
-            statusUpdate.put("reason", reason); // Ovaj razlog će se sada tačno videti u istoriji
+            statusUpdate.put("reason", reason); // This reason will now show up accurately in the history.
             statusUpdate.put("globalTransactionId", globalId);
             statusUpdate.put("acquirerTimestamp", LocalDateTime.now().toString());
 
             restTemplate.put(coreUrl, statusUpdate);
-            System.out.println("📞 WEBHOOK [" + status + "] -> Razlog: " + reason);
+            System.out.println("📞 WEBHOOK [" + status + "] -> Reason: " + reason);
         } catch (Exception e) {
-            System.err.println("⚠️ Greška pri slanju statusa: " + e.getMessage());
+            System.err.println("⚠️ Error sending status: " + e.getMessage());
         }
     }
 

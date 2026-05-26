@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * PCI DSS 10 - Controller za pristup audit logovima
+ * PCI DSS 10 - Controller for audit log access.
  */
 @RestController
 @RequestMapping("/api/audit")
@@ -28,7 +28,7 @@ public class AuditLogController {
     private AuditService auditService;
 
     /**
-     * Vraća paginirane audit logove
+     * Return paginated audit logs.
      */
     @GetMapping("/logs")
     public ResponseEntity<Page<AuditLog>> getLogs(
@@ -38,7 +38,7 @@ public class AuditLogController {
     }
 
     /**
-     * Vraća logove za određeni resurs
+     * Return logs for a specific resource.
      */
     @GetMapping("/logs/resource/{resourceId}")
     public ResponseEntity<List<AuditLog>> getLogsForResource(@PathVariable String resourceId) {
@@ -46,7 +46,7 @@ public class AuditLogController {
     }
 
     /**
-     * Pretraga audit logova
+     * Search audit logs.
      */
     @GetMapping("/logs/search")
     public ResponseEntity<Page<AuditLog>> searchLogs(
@@ -69,7 +69,7 @@ public class AuditLogController {
     }
 
     /**
-     * Vraća pristupe podacima kartice za PCI DSS izveštaj
+     * Return card-data accesses for the PCI DSS report.
      */
     @GetMapping("/logs/card-access")
     public ResponseEntity<List<AuditLog>> getCardDataAccessLogs(
@@ -90,7 +90,7 @@ public class AuditLogController {
         List<AuditLog> cardAccess = auditService.getCardDataAccessLogs(7);
         stats.put("cardAccessLast7Days", cardAccess.size());
         
-        // Broj failed login pokušaja u poslednjih 24h
+        // Number of failed login attempts in the last 24h.
         Instant since24h = Instant.now().minusSeconds(24 * 60 * 60);
         Page<AuditLog> failedLogins = auditService.searchLogs(
             null, AuditActionType.LOGIN_FAILURE, null, null, since24h, Instant.now(),

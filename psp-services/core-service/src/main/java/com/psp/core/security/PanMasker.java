@@ -4,8 +4,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * PCI DSS 3.4 - Maskiranje Primary Account Number (PAN)
- * Prikazuje samo prvih 6 i poslednjih 4 cifre, ostalo maskira sa *
+ * PCI DSS 3.4 - Masking of the Primary Account Number (PAN).
+ * Shows only the first 6 and last 4 digits; the rest is masked with '*'.
  */
 public class PanMasker {
 
@@ -13,15 +13,15 @@ public class PanMasker {
     private static final Pattern MASKED_PATTERN = Pattern.compile("\\d{6}\\*+\\d{4}");
 
     /**
-     * Maskira PAN prema PCI DSS standardu
-     * Primer: 4111111111111111 -> 411111******1111
+     * Mask a PAN according to the PCI DSS standard.
+     * Example: 4111111111111111 -> 411111******1111
      */
     public static String mask(String pan) {
         if (pan == null || pan.isEmpty()) {
             return pan;
         }
 
-        // Ukloni razmake i crtice
+        // Strip spaces and dashes.
         String cleanPan = pan.replaceAll("[\\s-]", "");
 
         if (cleanPan.length() < 13) {
@@ -36,7 +36,7 @@ public class PanMasker {
     }
 
     /**
-     * Maskira sve PAN brojeve u tekstu
+     * Mask every PAN-looking number found in the text.
      */
     public static String maskAllInText(String text) {
         if (text == null || text.isEmpty()) {
@@ -57,7 +57,7 @@ public class PanMasker {
     }
 
     /**
-     * Proverava da li je string već maskiran
+     * Return true if the string is already masked.
      */
     public static boolean isMasked(String value) {
         if (value == null) return false;
@@ -65,7 +65,7 @@ public class PanMasker {
     }
 
     /**
-     * Validira format PAN-a (Luhn check)
+     * Validate PAN format (Luhn check).
      */
     public static boolean isValidPan(String pan) {
         if (pan == null || pan.isEmpty()) {
@@ -103,7 +103,7 @@ public class PanMasker {
     }
 
     /**
-     * Ekstrakuje BIN (prvih 6 cifara) za identifikaciju banke
+     * Extract the BIN (first 6 digits) for bank identification.
      */
     public static String extractBin(String pan) {
         if (pan == null || pan.length() < 6) {
@@ -113,7 +113,7 @@ public class PanMasker {
     }
 
     /**
-     * Vraća tip kartice na osnovu BIN-a
+     * Return the card type based on the BIN.
      */
     public static String getCardType(String pan) {
         if (pan == null) return "UNKNOWN";

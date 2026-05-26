@@ -13,42 +13,42 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * PCI DSS - Repository za payment sesije
+ * PCI DSS - Repository for payment sessions.
  */
 @Repository
 public interface PaymentSessionRepository extends JpaRepository<PaymentSession, Long> {
 
     /**
-     * Pronađi sesiju po tokenu
+     * Find a session by its token.
      */
     Optional<PaymentSession> findBySessionToken(String sessionToken);
 
     /**
-     * Pronađi aktivne sesije za transakciju
+     * Find active sessions for a transaction.
      */
     List<PaymentSession> findByTransactionIdAndStatus(Long transactionId, SessionStatus status);
 
     /**
-     * Pronađi istekle sesije za čišćenje
+     * Find expired sessions for cleanup.
      */
     @Query("SELECT p FROM PaymentSession p WHERE p.expiresAt < :now AND p.status = 'ACTIVE'")
     List<PaymentSession> findExpiredSessions(@Param("now") Instant now);
 
     /**
-     * Označi istekle sesije
+     * Mark expired sessions.
      */
     @Modifying
     @Query("UPDATE PaymentSession p SET p.status = 'EXPIRED' WHERE p.expiresAt < :now AND p.status = 'ACTIVE'")
     int markExpiredSessions(@Param("now") Instant now);
 
     /**
-     * Broj aktivnih sesija za merchant-a (rate limiting)
+     * Number of active sessions for a merchant (rate limiting).
      */
     @Query("SELECT COUNT(p) FROM PaymentSession p WHERE p.merchantId = :merchantId AND p.status = 'ACTIVE' AND p.createdAt > :since")
     long countActiveSessions(@Param("merchantId") String merchantId, @Param("since") Instant since);
 
     /**
-     * Pronađi sesiju po transaction ID-u
+     * Find a session by its transaction ID.
      */
     Optional<PaymentSession> findByTransactionId(Long transactionId);
 }

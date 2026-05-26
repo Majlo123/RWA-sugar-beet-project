@@ -40,6 +40,6 @@ func seedUser(username, password, ethAddress, role string) error {
 	if err := DB.Create(user).Error; err != nil {
 		return err
 	}
-	log.Printf("✓ %s nalog kreiran: %s", role, username)
+	log.Printf("✓ %s account created: %s", role, username)
 	return nil
 }

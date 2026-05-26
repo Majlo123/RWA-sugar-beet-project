@@ -21,14 +21,14 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * PCI DSS 10 - Servis za audit logovanje
+ * PCI DSS 10 - Audit logging service.
  */
 @Service
 public class AuditService {
 
     private final AuditLogRepository auditLogRepository;
-    
-    // Broj neuspešnih pokušaja pre blokade
+
+    // Number of failed attempts before lockout.
     private static final int MAX_FAILED_ATTEMPTS = 5;
     private static final int LOCKOUT_MINUTES = 15;
 
@@ -37,13 +37,13 @@ public class AuditService {
     }
 
     /**
-     * Loguje akciju sa svim relevantnim podacima
-     * Koristi REQUIRES_NEW da bi mogla da se pozove iz readOnly transakcija
+     * Log an action with all relevant data.
+     * Uses REQUIRES_NEW so it can be called from readOnly transactions.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public AuditLog log(AuditActionType actionType, String actor, String resourceId, 
+    public AuditLog log(AuditActionType actionType, String actor, String resourceId,
                         String resourceType, AuditOutcome outcome, String details) {
-        
+
         AuditLog.AuditLogBuilder builder = AuditLog.builder()
             .actionType(actionType)
             .actor(actor != null ? actor : "ANONYMOUS")
@@ -53,7 +53,7 @@ public class AuditService {
             .details(sanitizeDetails(details))
             .requestId(UUID.randomUUID().toString());
 
-        // Pokušaj da dobiješ HTTP request informacije
+        // Best-effort attempt to pull HTTP request info.
         try {
             ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attrs != null) {
@@ -64,7 +64,7 @@ public class AuditService {
                 builder.endpoint(request.getRequestURI());
             }
         } catch (Exception e) {
-            // Ignoriši ako nema HTTP konteksta
+            // Ignore when no HTTP context is available.
         }
 
         AuditLog auditLog = builder.build();
@@ -72,14 +72,14 @@ public class AuditService {
     }
 
     /**
-     * Skraćena verzija za uspešne akcije
+     * Shorthand for successful actions.
      */
     public AuditLog logSuccess(AuditActionType actionType, String actor, String resourceId, String details) {
         return log(actionType, actor, resourceId, null, AuditOutcome.SUCCESS, details);
     }
 
     /**
-     * Skraćena verzija za neuspešne akcije
+     * Shorthand for failed actions.
      */
     public AuditLog logFailure(AuditActionType actionType, String actor, String resourceId, String reason) {
         AuditLog auditLog = log(actionType, actor, resourceId, null, AuditOutcome.FAILURE, null);
@@ -88,43 +88,43 @@ public class AuditService {
     }
 
     /**
-     * Loguje pristup podacima kartice
+     * Log access to card data.
      */
     public void logCardDataAccess(String actor, String transactionId, String maskedPan) {
-        log(AuditActionType.CARD_DATA_ACCESS, actor, transactionId, 
-            "TRANSACTION", AuditOutcome.SUCCESS, 
+        log(AuditActionType.CARD_DATA_ACCESS, actor, transactionId,
+            "TRANSACTION", AuditOutcome.SUCCESS,
             "Card accessed: " + maskedPan);
     }
 
     /**
-     * Loguje kreiranje transakcije
+     * Log transaction creation.
      */
     public void logTransactionCreated(String merchantId, Long transactionId, Double amount, String currency) {
-        log(AuditActionType.TRANSACTION_CREATED, merchantId, 
+        log(AuditActionType.TRANSACTION_CREATED, merchantId,
             String.valueOf(transactionId), "TRANSACTION", AuditOutcome.SUCCESS,
             String.format("Amount: %.2f %s", amount, currency));
     }
 
     /**
-     * Loguje promenu statusa transakcije
+     * Log a transaction status change.
      */
-    public void logTransactionStatusChanged(String actor, String transactionId, 
+    public void logTransactionStatusChanged(String actor, String transactionId,
                                             String oldStatus, String newStatus) {
-        log(AuditActionType.TRANSACTION_STATUS_CHANGED, actor, 
+        log(AuditActionType.TRANSACTION_STATUS_CHANGED, actor,
             transactionId, "TRANSACTION", AuditOutcome.SUCCESS,
             String.format("Status: %s -> %s", oldStatus, newStatus));
     }
 
     /**
-     * Loguje pokušaj nevalidnog pristupa
+     * Log an invalid access attempt.
      */
     public void logInvalidAccess(String actor, String resourceId, String reason) {
-        log(AuditActionType.INVALID_ACCESS_ATTEMPT, actor, 
+        log(AuditActionType.INVALID_ACCESS_ATTEMPT, actor,
             resourceId, null, AuditOutcome.ACCESS_DENIED, reason);
     }
 
     /**
-     * Proverava da li je IP blokiran zbog previše neuspešnih pokušaja
+     * Return true if the IP is blocked due to too many failed attempts.
      */
     public boolean isIpBlocked(String ip) {
         Instant since = Instant.now().minus(LOCKOUT_MINUTES, ChronoUnit.MINUTES);
@@ -133,18 +133,18 @@ public class AuditService {
     }
 
     /**
-     * Dobija listu audit logova za resurs
+     * Get audit logs for a resource.
      */
     @Transactional(readOnly = true)
     public List<AuditLog> getLogsForResource(String resourceId) {
-        // Loguje pristup audit logovima (PCI DSS 10.2.3)
-        log(AuditActionType.AUDIT_LOG_ACCESSED, "SYSTEM", resourceId, 
+        // Log access to the audit logs themselves (PCI DSS 10.2.3).
+        log(AuditActionType.AUDIT_LOG_ACCESSED, "SYSTEM", resourceId,
             "AUDIT_LOG", AuditOutcome.SUCCESS, null);
         return auditLogRepository.findByResourceIdOrderByTimestampDesc(resourceId);
     }
 
     /**
-     * Straničeni pristup svim logovima
+     * Paginated access to all logs.
      * Note: We don't log access to audit logs within this read-only transaction
      * to avoid write conflicts. Audit log access can be tracked separately.
      */
@@ -154,14 +154,14 @@ public class AuditService {
     }
 
     /**
-     * Pretraga audit logova
+     * Search audit logs.
      */
     @Transactional(readOnly = true)
-    public Page<AuditLog> searchLogs(String actor, AuditActionType actionType, 
+    public Page<AuditLog> searchLogs(String actor, AuditActionType actionType,
                                      AuditOutcome outcome, String resourceId,
                                      Instant startDate, Instant endDate, Pageable pageable) {
         return auditLogRepository.searchAuditLogs(
-            actor, actionType, outcome, resourceId, 
+            actor, actionType, outcome, resourceId,
             startDate != null ? startDate : Instant.now().minus(30, ChronoUnit.DAYS),
             endDate != null ? endDate : Instant.now(),
             pageable
@@ -169,7 +169,7 @@ public class AuditService {
     }
 
     /**
-     * Dobija pristupe podacima kartice za PCI DSS izveštaj
+     * Get card-data accesses for the PCI DSS report.
      */
     @Transactional(readOnly = true)
     public List<AuditLog> getCardDataAccessLogs(int days) {
@@ -178,7 +178,7 @@ public class AuditService {
     }
 
     /**
-     * Sanitizuje detalje da ne sadrže osetljive podatke
+     * Sanitize details so they do not contain sensitive data.
      */
     private String sanitizeDetails(String details) {
         if (details == null) return null;
@@ -186,7 +186,7 @@ public class AuditService {
     }
 
     /**
-     * Ekstrahuje stvarnu IP adresu klijenta
+     * Extract the real client IP address.
      */
     private String getClientIp(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");

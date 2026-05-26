@@ -6,55 +6,55 @@ import "./BEET.sol";
 
 /**
  * @title Treasury
- * @dev Ugovor koji upravlja investicijama, mintuje tokene i obradjuje zahteve za prinos.
+ * @dev Contract that manages investments, mints tokens, and processes yield-claim requests.
  */
 contract Treasury is Ownable {
-    // Adresa naseg BEET token ugovora
+    // Address of our BEET token contract.
     BEET public beetToken;
 
-    // Definicija strukture koja opisuje jednu investiciju
+    // Struct describing a single investment.
     struct Investment {
-        address investor; // Adresa investitora
-        uint256 amountUSD; // Ulozeni iznos u USD
-        uint256 startTime; // Vreme kada je investicija zapoceta (timestamp)
-        uint256 maturesOn; // Vreme kada investicija dospeva (timestamp)
-        bool isClaimed; // Da li je prinos isplacen
+        address investor; // Investor's address
+        uint256 amountUSD; // Amount invested in USD
+        uint256 startTime; // Timestamp when the investment started
+        uint256 maturesOn; // Timestamp when the investment matures
+        bool isClaimed; // Whether the yield has been paid out
     }
 
-    // Niz koji cuva sve pojedinacne investicije
+    // Array that stores every individual investment.
     Investment[] public investments;
 
-    // Mapa koja povezuje adresu investitora sa ID-jevima njegovih investicija
+    // Map linking an investor's address to the IDs of their investments.
     mapping(address => uint256[]) public investmentsByInvestor;
-    
-    // Konstante definisane prema specifikaciji
-    uint256 public constant TOKEN_PRICE_USD = 1000; // Cena jednog tokena je 1000 USD 
-    uint256 public constant YIELD_PERCENTAGE = 10; // Prinos je 10% [cite: 7]
-    uint256 public constant INVESTMENT_DURATION_SECONDS = 20; // Trajanje ciklusa je 1 godina 
 
-    // Event koji se emituje kada se prinos uspesno zatrazi
+    // Constants defined by the specification.
+    uint256 public constant TOKEN_PRICE_USD = 1000; // Price of one token is 1000 USD
+    uint256 public constant YIELD_PERCENTAGE = 10; // Yield is 10% [cite: 7]
+    uint256 public constant INVESTMENT_DURATION_SECONDS = 20; // Cycle duration is 1 year
+
+    // Event emitted when the yield is successfully claimed.
     event YieldClaimed(uint256 investmentId, address investor);
 
     /**
-     * @param _beetTokenAddress Adresa deploy-ovanog BEET token ugovora.
-     * @param _initialOwner Adresa koja ce biti admin sistema.
+     * @param _beetTokenAddress Address of the deployed BEET token contract.
+     * @param _initialOwner Address that will be the system admin.
      */
     constructor(address _beetTokenAddress, address _initialOwner) Ownable(_initialOwner) {
         beetToken = BEET(_beetTokenAddress);
     }
 
     /**
-     * @dev Admin funkcija za evidentiranje uplate i mintovanje tokena investitoru.
-     * @param investor Adresa korisnika koji je investirao.
-     * @param amountUSD Iznos u USD koji je korisnik uplatio.
+     * @dev Admin function for recording a payment and minting tokens to the investor.
+     * @param investor Address of the user who invested.
+     * @param amountUSD Amount in USD that the user paid.
      */
     function recordInvestment(address investor, uint256 amountUSD) public onlyOwner {
-        require(amountUSD % TOKEN_PRICE_USD == 0, "Uplata mora biti umnozak cene tokena.");
-        
+        require(amountUSD % TOKEN_PRICE_USD == 0, "Payment must be a multiple of the token price.");
+
         uint256 investmentId = investments.length;
         uint256 maturityDate = block.timestamp + INVESTMENT_DURATION_SECONDS;
 
-        // Kreiranje i cuvanje nove investicije
+        // Create and store the new investment.
         investments.push(Investment({
             investor: investor,
             amountUSD: amountUSD,
@@ -65,31 +65,31 @@ contract Treasury is Ownable {
 
         investmentsByInvestor[investor].push(investmentId);
 
-        // Izracunavanje kolicine tokena za mintovanje
-        uint256 tokenAmount = (amountUSD / TOKEN_PRICE_USD) * (10**18); // 1 token = 1000 USD 
-        
-        // Pozivanje mint funkcije na BEET ugovoru
+        // Calculate how many tokens to mint.
+        uint256 tokenAmount = (amountUSD / TOKEN_PRICE_USD) * (10**18); // 1 token = 1000 USD
+
+        // Call the mint function on the BEET contract.
         beetToken.mint(investor, tokenAmount);
     }
 
     /**
-     * @dev Korisnicka funkcija za trazenje prinosa nakon sto investicija dospe.
-     * @param investmentId ID investicije za koju se trazi prinos.
+     * @dev User function for claiming the yield after the investment matures.
+     * @param investmentId ID of the investment whose yield is being claimed.
      */
     function claimYield(uint256 investmentId) public {
-        require(investmentId < investments.length, "Nepostojeca investicija.");
+        require(investmentId < investments.length, "Investment does not exist.");
         Investment storage investment = investments[investmentId];
 
-        require(msg.sender == investment.investor, "Niste vlasnik ove investicije.");
-        require(block.timestamp >= investment.maturesOn, "Investicija jos nije dospela.");
-        require(!investment.isClaimed, "Prinos je vec isplacen.");
+        require(msg.sender == investment.investor, "You are not the owner of this investment.");
+        require(block.timestamp >= investment.maturesOn, "Investment has not matured yet.");
+        require(!investment.isClaimed, "Yield has already been claimed.");
 
         investment.isClaimed = true;
         emit YieldClaimed(investmentId, msg.sender);
     }
 
     /**
-     * @dev Pomocna funkcija za dohvatanje svih ID-jeva investicija za datog korisnika.
+     * @dev Helper function for fetching all investment IDs belonging to a given user.
      */
     function getInvestmentIdsForInvestor(address _investor) public view returns (uint256[] memory) {
         return investmentsByInvestor[_investor];

@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * PCI DSS 3.2 - Payment Session za kontrolu pristupa plaćanju
- * 
- * Sesija ističe nakon definisanog vremena (default 15 minuta)
- * Sadrži token za jednokratnu upotrebu
+ * PCI DSS 3.2 - Payment Session for payment access control.
+ *
+ * The session expires after a configured time (default: 15 minutes)
+ * and carries a single-use token.
  */
 @Entity
 @Table(name = "payment_sessions", indexes = {
@@ -28,80 +28,80 @@ public class PaymentSession {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Jedinstveni token sesije */
+    /** Unique session token */
     @Column(nullable = false, unique = true, length = 64)
     private String sessionToken;
 
-    /** Povezana transakcija */
+    /** Linked transaction */
     @Column(nullable = false)
     private Long transactionId;
 
-    /** Merchant koji je inicirao plaćanje */
+    /** Merchant that initiated the payment */
     @Column(nullable = false, length = 50)
     private String merchantId;
 
-    /** Iznos transakcije */
+    /** Transaction amount */
     @Column(nullable = false)
     private Double amount;
 
-    /** Valuta */
+    /** Currency */
     @Column(nullable = false, length = 3)
     private String currency;
 
-    /** Kreirana u */
+    /** Created at */
     @Column(nullable = false)
     private Instant createdAt;
 
-    /** Ističe u */
+    /** Expires at */
     @Column(nullable = false)
     private Instant expiresAt;
 
-    /** Da li je sesija korišćena */
+    /** Whether the session has been used */
     @Column(nullable = false)
     private Boolean isUsed = false;
 
-    /** Vreme kada je sesija korišćena */
+    /** Time when the session was used */
     private Instant usedAt;
 
-    /** IP adresa koja je koristila sesiju */
+    /** IP address that used the session */
     @Column(length = 45)
     private String usedByIp;
 
-    /** Metoda plaćanja koja je odabrana */
+    /** Selected payment method */
     @Column(length = 20)
     private String paymentMethod;
 
-    /** Status sesije */
+    /** Session status */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private SessionStatus status = SessionStatus.ACTIVE;
 
-    /** Broj pokušaja korišćenja */
+    /** Number of use attempts */
     @Column(nullable = false)
     private Integer attemptCount = 0;
 
-    /** URL za uspeh */
+    /** Success URL */
     @Column(length = 500)
     private String successUrl;
 
-    /** URL za neuspeh */
+    /** Failure URL */
     @Column(length = 500)
     private String failedUrl;
 
-    /** URL za grešku */
+    /** Error URL */
     @Column(length = 500)
     private String errorUrl;
 
     public enum SessionStatus {
-        ACTIVE,      // Sesija je aktivna
-        USED,        // Sesija je uspešno korišćena
-        EXPIRED,     // Sesija je istekla
-        CANCELLED,   // Sesija je otkazana
-        BLOCKED      // Sesija je blokirana (previše pokušaja)
+        ACTIVE,      // Session is active
+        USED,        // Session was used successfully
+        EXPIRED,     // Session has expired
+        CANCELLED,   // Session was cancelled
+        BLOCKED      // Session is blocked (too many attempts)
     }
 
     /**
-     * Proverava da li je sesija validna (nije istekla i nije korišćena)
+     * Returns true if the session is valid (not expired and not used).
      */
     public boolean isValid() {
         if (isUsed || status != SessionStatus.ACTIVE) {
@@ -111,7 +111,7 @@ public class PaymentSession {
     }
 
     /**
-     * Označi sesiju kao korišćenu
+     * Mark the session as used.
      */
     public void markAsUsed(String ipAddress) {
         this.isUsed = true;
@@ -121,18 +121,18 @@ public class PaymentSession {
     }
 
     /**
-     * Povećaj broj pokušaja
+     * Increment the attempt counter.
      */
     public void incrementAttempts() {
         this.attemptCount++;
-        // Blokiraj nakon 5 neuspešnih pokušaja
+        // Block after 5 failed attempts.
         if (this.attemptCount >= 5) {
             this.status = SessionStatus.BLOCKED;
         }
     }
 
     /**
-     * Označi kao isteklu
+     * Mark the session as expired.
      */
     public void markAsExpired() {
         this.status = SessionStatus.EXPIRED;
@@ -141,7 +141,7 @@ public class PaymentSession {
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = Instant.now();
-        if (expiresAt == null) expiresAt = createdAt.plusSeconds(15 * 60); // 15 minuta
+        if (expiresAt == null) expiresAt = createdAt.plusSeconds(15 * 60); // 15 minutes
         if (status == null) status = SessionStatus.ACTIVE;
         if (isUsed == null) isUsed = false;
         if (attemptCount == null) attemptCount = 0;

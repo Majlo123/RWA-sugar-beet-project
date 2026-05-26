@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * PCI DSS 8 - Servis za upravljanje merchantima sa sigurnim rukovanjem kredencijalima
+ * PCI DSS 8 - Merchant management service with secure credential handling.
  */
 @Service
 @Transactional
@@ -32,15 +32,15 @@ public class MerchantService {
     private final PasswordHasher passwordHasher = new PasswordHasher();
 
     /**
-     * Registruje novog merchanta sa heširanom lozinkom
+     * Register a new merchant with a hashed password.
      */
     public Merchant registerMerchant(Merchant merchant) {
-        // Generiši ID ako nije dat
+        // Generate an ID if one was not supplied.
         if (merchant.getMerchantId() == null || merchant.getMerchantId().isEmpty()) {
             merchant.setMerchantId(UUID.randomUUID().toString());
         }
 
-        // Generiši i heširaj lozinku
+        // Generate and hash the password.
         String rawPassword;
         if (merchant.getMerchantPassword() == null || merchant.getMerchantPassword().isEmpty()) {
             rawPassword = UUID.randomUUID().toString().replace("-", "");
@@ -48,7 +48,7 @@ public class MerchantService {
             rawPassword = merchant.getMerchantPassword();
         }
 
-        // PCI DSS 8.2.1 - Heširaj lozinku pre čuvanja
+        // PCI DSS 8.2.1 - Hash the password before storing it.
         String hashedPassword = passwordHasher.hash(rawPassword);
         merchant.setMerchantPassword(hashedPassword);
 
@@ -63,11 +63,11 @@ public class MerchantService {
             saved.getMerchantId(), "MERCHANT", AuditOutcome.SUCCESS,
             "Payment methods: " + methods);
 
-        // VAŽNO: Vrati original password u response-u samo jednom
-        // Kreiraj kopiju za response sa originalnom lozinkom
+        // IMPORTANT: Return the original password in the response only once.
+        // Build a response copy with the original plaintext password.
         Merchant response = new Merchant();
         response.setMerchantId(saved.getMerchantId());
-        response.setMerchantPassword(rawPassword); // Vrati plaintext samo u response
+        response.setMerchantPassword(rawPassword); // Plaintext returned only in the response
         response.setName(saved.getName());
         response.setPaymentMethods(saved.getPaymentMethods());
         response.setSuccessUrl(saved.getSuccessUrl());
@@ -80,7 +80,7 @@ public class MerchantService {
     }
 
     /**
-     * Ažurira pretplatu merchanta
+     * Update the merchant's subscription.
      */
     public Merchant updateMerchantSubscription(String merchantId, MerchantUpdateRequest request) {
         Merchant merchant = merchantRepository.findById(merchantId)
@@ -99,13 +99,13 @@ public class MerchantService {
             merchantId, "MERCHANT", AuditOutcome.SUCCESS,
             String.format("Methods: %s -> %s", oldMethods, saved.getPaymentMethods()));
 
-        // Ne vraćaj lozinku u response
+        // Do not return the password in the response.
         saved.setMerchantPassword("[PROTECTED]");
         return saved;
     }
 
     /**
-     * Vraća merchanta (bez lozinke)
+     * Return the merchant (without the password).
      */
     @Transactional(readOnly = true)
     public Merchant getMerchant(String merchantId) {
@@ -116,13 +116,13 @@ public class MerchantService {
         auditService.log(AuditActionType.MERCHANT_VIEWED, "SYSTEM",
             merchantId, "MERCHANT", AuditOutcome.SUCCESS, null);
 
-        // Ne vraćaj lozinku
+        // Do not return the password.
         merchant.setMerchantPassword("[PROTECTED]");
         return merchant;
     }
 
     /**
-     * Vraća metode plaćanja za merchanta
+     * Return the merchant's payment methods.
      */
     @Transactional(readOnly = true)
     public MerchantMethodsResponse getMerchantMethods(String merchantId) {
@@ -139,7 +139,7 @@ public class MerchantService {
     }
 
     /**
-     * PCI DSS 8.2 - Autentifikacija merchanta sa heširanjem
+     * PCI DSS 8.2 - Merchant authentication with hashed-password verification.
      */
     public Optional<Merchant> authenticateMerchant(String merchantId, String password) {
         Optional<Merchant> merchantOpt = merchantRepository.findById(merchantId);
@@ -152,21 +152,21 @@ public class MerchantService {
 
         Merchant merchant = merchantOpt.get();
 
-        // Proveri da li je nalog zaključan
+        // Check whether the account is locked.
         if (merchant.isCurrentlyLocked()) {
             auditService.log(AuditActionType.LOGIN_FAILURE, merchantId,
                 merchantId, "MERCHANT", AuditOutcome.ACCESS_DENIED, "Account locked");
             return Optional.empty();
         }
 
-        // Proveri da li je nalog aktivan
+        // Check whether the account is active.
         if (merchant.getIsActive() != null && !merchant.getIsActive()) {
             auditService.log(AuditActionType.LOGIN_FAILURE, merchantId,
                 merchantId, "MERCHANT", AuditOutcome.ACCESS_DENIED, "Account inactive");
             return Optional.empty();
         }
 
-        // Verifikuj lozinku
+        // Verify the password.
         boolean isValid = passwordHasher.verify(password, merchant.getMerchantPassword());
 
         if (!isValid) {
@@ -180,7 +180,7 @@ public class MerchantService {
             return Optional.empty();
         }
 
-        // Uspešna autentifikacija
+        // Successful authentication.
         merchant.resetFailedAttempts();
         merchantRepository.save(merchant);
 
@@ -191,7 +191,7 @@ public class MerchantService {
     }
 
     /**
-     * Menja lozinku merchanta
+     * Change the merchant's password.
      */
     public boolean changePassword(String merchantId, String oldPassword, String newPassword) {
         Optional<Merchant> authResult = authenticateMerchant(merchantId, oldPassword);

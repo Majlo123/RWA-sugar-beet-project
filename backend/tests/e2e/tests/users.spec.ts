@@ -6,7 +6,7 @@ test.describe('GET /users/profile', () => {
     const res = await request.get('/users/profile');
     expect(res.status()).toBe(401);
     expect((await res.json()).message).toBe(
-      'Autorizacija neuspešna: Token nije priložen.',
+      'Authorization failed: Token not provided.',
     );
   });
 
@@ -16,7 +16,7 @@ test.describe('GET /users/profile', () => {
     });
     expect(res.status()).toBe(401);
     expect((await res.json()).message).toBe(
-      'Autorizacija neuspešna: Token nije priložen.',
+      'Authorization failed: Token not provided.',
     );
   });
 
@@ -26,7 +26,7 @@ test.describe('GET /users/profile', () => {
     });
     expect(res.status()).toBe(403);
     expect((await res.json()).message).toBe(
-      'Autorizacija neuspešna: Token nije validan.',
+      'Authorization failed: Token is not valid.',
     );
   });
 

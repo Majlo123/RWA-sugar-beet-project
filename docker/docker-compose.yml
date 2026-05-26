@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # 1. Baza za PSP Core Servis
+  # 1. Database for the PSP Core Service
   psp-core-db:
     image: postgres:15-alpine
     container_name: psp-core-db
@@ -22,7 +22,7 @@ services:
       retries: 10
       start_period: 10s
 
-  # 2. Baza za Card/QR Servis
+  # 2. Database for the Card/QR Service
   psp-card-db:
     image: postgres:15-alpine
     container_name: psp-card-db
@@ -43,16 +43,16 @@ services:
       retries: 10
       start_period: 10s
 
-  # --- NOVO: 5. Baza za Bank Service (Simulator Banke) ---
+  # --- NEW: 5. Database for the Bank Service (bank simulator) ---
   bank-db:
     image: postgres:15-alpine
     container_name: bank-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: super
-      POSTGRES_DB: bank_db     # Ime baze koju će Docker sam napraviti
+      POSTGRES_DB: bank_db     # Database name Docker will auto-create
     ports:
-      - "5445:5432"            # Mapiramo na 5445 da se ne sudara sa ostalima
+      - "5445:5432"            # Mapped to 5445 to avoid clashing with others
     volumes:
       - bank_data:/var/lib/postgresql/data
     networks:
@@ -64,7 +64,7 @@ services:
       retries: 10
       start_period: 10s
 
-  # 3. Baza za PayPal Servis
+  # 3. Database for the PayPal Service
   paypal-mongo-db:
     image: mongo:6.0
     container_name: paypal-mongo-db

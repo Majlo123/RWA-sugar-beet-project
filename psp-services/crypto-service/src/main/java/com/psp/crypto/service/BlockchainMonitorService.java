@@ -47,7 +47,7 @@ public class BlockchainMonitorService {
             return checkEthereumPayment(address, transaction, result);
         } catch (Exception e) {
             result.put("error", "Error checking payment: " + e.getMessage());
-            result.put("message", "Greška pri proveri plaćanja");
+            result.put("message", "Error while checking the payment");
             result.put("paymentConfirmed", false);
             return result;
         }
@@ -69,7 +69,7 @@ public class BlockchainMonitorService {
                 result.put("paymentConfirmed", true);
                 result.put("confirmations", 2); // At least 2 confirmations on Sepolia
                 result.put("txHash", transaction.getTxHash());
-                result.put("message", "✅ Ethereum transakcija potvrđena!");
+                result.put("message", "✅ Ethereum transaction confirmed!");
                 result.put("status", "COMPLETED");
 
                 // Mark as COMPLETED if not already
@@ -86,14 +86,14 @@ public class BlockchainMonitorService {
             } else {
                 // No tx sent yet via MetaMask
                 result.put("paymentConfirmed", false);
-                result.put("message", "Čekam ETH transakciju sa MetaMask...");
+                result.put("message", "Waiting for the ETH transaction from MetaMask...");
             }
 
             return result;
         } catch (Exception e) {
             System.err.println("❌ Ethereum check error: " + e.getMessage());
             result.put("error", "Ethereum check error: " + e.getMessage());
-            result.put("message", "Greška pri proveri ETH transakcije");
+            result.put("message", "Error while checking the ETH transaction");
             result.put("paymentConfirmed", false);
             return result;
         }

@@ -29,17 +29,17 @@ public class QRPaymentController {
     public ResponseEntity<?> generateQRCode(@PathVariable Long pspTransactionId) {
         return transactionRepository.findById(pspTransactionId).map(transaction -> {
             try {
-                // Generisanje koda preko QR servisa
+                // Generate the code via the QR service.
                 Map<String, String> qrData = qrService.generateIPSQRCode(transaction);
-                
-                // Ažuriranje metode preko Transaction servisa
+
+                // Update the method via the Transaction service.
                 transaction.setPaymentMethod("QR");
                 transactionRepository.save(transaction);
 
                 return ResponseEntity.ok(qrData);
             } catch (Exception e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                     .body("Greška: " + e.getMessage());
+                                     .body("Error: " + e.getMessage());
             }
         }).orElse(ResponseEntity.notFound().build());
     }
@@ -47,19 +47,19 @@ public class QRPaymentController {
     @PostMapping("/simulate-pay/{pspTransactionId}")
     public ResponseEntity<?> simulatePayment(@PathVariable Long pspTransactionId) {
         return transactionRepository.findById(pspTransactionId).map(transaction -> {
-            // Provera limita (Stavka 1.2)
+            // Limit check (Item 1.2).
             if (transaction.getAmount() > 20000) {
-                transactionService.updateStatus(String.valueOf(pspTransactionId), 
+                transactionService.updateStatus(String.valueOf(pspTransactionId),
                     Map.of("status", "FAILED", "reason", "LIMIT_EXCEEDED"));
-                return ResponseEntity.badRequest().body("Iznos premašuje limit (20.000 RSD)");
+                return ResponseEntity.badRequest().body("Amount exceeds the limit (20,000 RSD)");
             }
 
-            // Uspešna simulacija
+            // Successful simulation.
             String mockGlobalId = "QR-IPS-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-            transactionService.updateStatus(String.valueOf(pspTransactionId), 
+            transactionService.updateStatus(String.valueOf(pspTransactionId),
                 Map.of("status", "PAID", "globalTransactionId", mockGlobalId));
 
-            return ResponseEntity.ok("Simulacija uspešna. Global ID: " + mockGlobalId);
+            return ResponseEntity.ok("Simulation successful. Global ID: " + mockGlobalId);
         }).orElse(ResponseEntity.notFound().build());
     }
 }

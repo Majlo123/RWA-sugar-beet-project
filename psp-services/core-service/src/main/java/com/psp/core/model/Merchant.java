@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * PCI DSS 8.2 - Merchant entitet sa sigurno sačuvanim kredencijalima
+ * PCI DSS 8.2 - Merchant entity with securely stored credentials.
  */
 @Entity
 @Data
@@ -28,8 +28,8 @@ public class Merchant {
     private String merchantId;
 
     /**
-     * PCI DSS 8.2.1 - Lozinka se čuva kao hash (salt:hash format)
-     * Nikada se ne čuva kao plaintext
+     * PCI DSS 8.2.1 - Password stored as a hash (salt:hash format).
+     * It is never stored as plaintext.
      */
     @NotBlank(message = "Merchant password is required")
     @Column(nullable = false)
@@ -58,35 +58,35 @@ public class Merchant {
 
     // PCI DSS Security Fields
     
-    /** Vreme registracije */
+    /** Registration time */
     @Column(name = "created_at")
     private Instant createdAt;
 
-    /** Poslednja izmena */
+    /** Last update time */
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    /** Da li je merchant aktivan */
+    /** Whether the merchant is active */
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    /** Broj neuspešnih pokušaja autentifikacije */
+    /** Number of failed authentication attempts */
     @Column(name = "failed_auth_attempts")
     private Integer failedAuthAttempts = 0;
 
-    /** Vreme poslednjeg neuspešnog pokušaja */
+    /** Time of the last failed attempt */
     @Column(name = "last_failed_auth")
     private Instant lastFailedAuth;
 
-    /** Da li je nalog zaključan */
+    /** Whether the account is locked */
     @Column(name = "is_locked")
     private Boolean isLocked = false;
 
-    /** Vreme do kad je nalog zaključan */
+    /** Time the account is locked until */
     @Column(name = "locked_until")
     private Instant lockedUntil;
 
-    /** Poslednja uspešna autentifikacija */
+    /** Last successful authentication */
     @Column(name = "last_successful_auth")
     private Instant lastSuccessfulAuth;
 
@@ -105,7 +105,7 @@ public class Merchant {
     }
 
     /**
-     * Proverava da li je nalog zaključan
+     * Return true if the account is currently locked.
      */
     public boolean isCurrentlyLocked() {
         if (isLocked == null || !isLocked) return false;
@@ -114,22 +114,22 @@ public class Merchant {
     }
 
     /**
-     * Povećava broj neuspešnih pokušaja
+     * Increment the failed-attempt counter.
      */
     public void incrementFailedAttempts() {
         if (failedAuthAttempts == null) failedAuthAttempts = 0;
         failedAuthAttempts++;
         lastFailedAuth = Instant.now();
-        
-        // PCI DSS 8.1.6 - Zaključaj nakon 6 neuspešnih pokušaja
+
+        // PCI DSS 8.1.6 - Lock the account after 6 failed attempts.
         if (failedAuthAttempts >= 6) {
             isLocked = true;
-            lockedUntil = Instant.now().plusSeconds(30 * 60); // 30 minuta
+            lockedUntil = Instant.now().plusSeconds(30 * 60); // 30 minutes
         }
     }
 
     /**
-     * Resetuje broj neuspešnih pokušaja nakon uspešne autentifikacije
+     * Reset the failed-attempt counter after successful authentication.
      */
     public void resetFailedAttempts() {
         failedAuthAttempts = 0;
