@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from "react-router-dom";
-import { Sprout, Wallet, LogOut, ShieldCheck, User as UserIcon, ExternalLink, UserCheck, Plus } from "lucide-react";
+import { Sprout, Wallet, LogOut, ShieldCheck, User as UserIcon, ExternalLink, UserCheck, Coins, History } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 function Layout() {
@@ -36,6 +36,22 @@ function Layout() {
               <NavLink to="/" end className={navLinkClass}>Home</NavLink>
               {user && user.role !== 'admin' && <NavLink to="/profile" className={navLinkClass}>Dashboard</NavLink>}
               {user && user.role !== 'admin' && (
+                <NavLink to="/buy-tokens" className={navLinkClass}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Coins className="w-3.5 h-3.5" />
+                    Buy Tokens
+                  </span>
+                </NavLink>
+              )}
+              {user && user.role !== 'admin' && (
+                <NavLink to="/payments/history" className={navLinkClass}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <History className="w-3.5 h-3.5" />
+                    Payments
+                  </span>
+                </NavLink>
+              )}
+              {user && user.role !== 'admin' && (
                 <NavLink to="/kyc" className={navLinkClass}>
                   <span className="inline-flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5" />
@@ -52,14 +68,6 @@ function Layout() {
                   <span className="inline-flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5" />
                     KYC Reviews
-                  </span>
-                </NavLink>
-              )}
-              {user?.role === 'admin' && (
-                <NavLink to="/admin/record-investment" className={navLinkClass}>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Plus className="w-3.5 h-3.5" />
-                    Record Investment
                   </span>
                 </NavLink>
               )}
@@ -118,10 +126,11 @@ function Layout() {
             <nav className="md:hidden flex items-center gap-1 pb-2">
               <NavLink to="/" end className={navLinkClass}>Home</NavLink>
               {user.role !== 'admin' && <NavLink to="/profile" className={navLinkClass}>Dashboard</NavLink>}
+              {user.role !== 'admin' && <NavLink to="/buy-tokens" className={navLinkClass}>Buy</NavLink>}
+              {user.role !== 'admin' && <NavLink to="/payments/history" className={navLinkClass}>Payments</NavLink>}
               {user.role !== 'admin' && <NavLink to="/kyc" className={navLinkClass}>KYC</NavLink>}
               {user.role === 'admin' && <NavLink to="/admin" end className={navLinkClass}>Dashboard</NavLink>}
               {user.role === 'admin' && <NavLink to="/admin/kyc" className={navLinkClass}>KYC</NavLink>}
-              {user.role === 'admin' && <NavLink to="/admin/record-investment" className={navLinkClass}>Record</NavLink>}
             </nav>
           )}
         </div>
