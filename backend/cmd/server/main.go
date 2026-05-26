@@ -54,6 +54,10 @@ func main() {
 	}
 	log.Println("Svi modeli su uspešno sinhronizovani.")
 
+	if err := config.SeedDatabase(); err != nil {
+		log.Fatalf("Seed podataka nije uspela: %v", err)
+	}
+
 	if err := config.InitBlockchain(); err != nil {
 		log.Fatalf("Nije moguće povezati se na blockchain: %v", err)
 	}
