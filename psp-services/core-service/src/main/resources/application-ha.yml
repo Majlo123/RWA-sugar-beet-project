@@ -1,0 +1,234 @@
+# High Availability & Resilience Configuration for Core Service
+# Includes Circuit Breaker, Retry, Bulkhead, and SSL/TLS settings
+
+server:
+  port: 8080
+  ssl:
+    enabled: false  # Nginx handles SSL/TLS, services use HTTP internally
+  compression:
+    enabled: true
+    min-response-size: 1024
+
+spring:
+  application:
+    name: psp-core-service
+  
+  datasource:
+    url: jdbc:postgresql://psp-core-db-primary:5432/psp_core_db
+    username: postgres
+    password: super
+    # Connection pool configuration for HA
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      auto-commit: true
+      leak-detection-threshold: 60000
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        # Connection pooling for replica reads (if implemented)
+        jdbc.batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+# Resilience4j Configuration
+# ============================================================
+resilience4j:
+  # Circuit Breaker Configuration
+  circuitbreaker:
+    configs:
+      default:
+        register-health-indicator: true
+        sliding-window-size: 100
+        slow-call-duration-threshold: 2000
+        slow-call-rate-threshold: 100
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-enabled: true
+    
+    instances:
+      # Circuit breaker for external bank API calls
+      bank-api:
+        base-config: default
+        failure-rate-threshold: 40
+        wait-duration-in-open-state: 20000
+      
+      # Circuit breaker for PayPal API calls
+      paypal-api:
+        base-config: default
+        failure-rate-threshold: 45
+        wait-duration-in-open-state: 25000
+      
+      # Circuit breaker for Crypto API calls
+      crypto-api:
+        base-config: default
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30000
+      
+      # Circuit breaker for database operations
+      database:
+        base-config: default
+        failure-rate-threshold: 20
+        wait-duration-in-open-state: 5000
+
+  # Retry Configuration
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 1000
+        retry-exceptions:
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - java.util.concurrent.TimeoutException
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+    
+    instances:
+      # Retry for transient failures
+      transient-errors:
+        base-config: default
+        max-attempts: 3
+        wait-duration: 2000
+      
+      # Retry for database operations
+      database-retry:
+        base-config: default
+        max-attempts: 2
+        wait-duration: 500
+
+  # Bulkhead Configuration (Thread pool isolation)
+  bulkhead:
+    configs:
+      default:
+        max-concurrent-calls: 100
+        max-wait-duration: 10000
+        writable-stack-trace-enabled: true
+    
+    instances:
+      # Bulkhead for external service calls
+      external-services:
+        max-concurrent-calls: 50
+        max-wait-duration: 5000
+      
+      # Bulkhead for database operations
+      database-ops:
+        max-concurrent-calls: 30
+        max-wait-duration: 5000
+
+  # Timeout Configuration
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 10000
+        cancel-running-future: true
+    
+    instances:
+      external-api:
+        timeout-duration: 15000
+      database-query:
+        timeout-duration: 5000
+
+# PCI DSS Security Configuration
+pci-dss:
+  # PCI DSS 3.5 - Encryption key
+  encryption:
+    key: ${PCI_ENCRYPTION_KEY:PCI_DSS_AES256_KEY_CHANGE_IN_PROD}
+    algorithm: AES/GCM/NoPadding
+  
+  # PCI DSS 8.1.6 - Account lockout settings
+  account-lockout:
+    max-failed-attempts: 6
+    lockout-duration-minutes: 30
+  
+  # PCI DSS 10.2 - Audit logging
+  audit:
+    enabled: true
+    retention-days: 365
+    
+  # PCI DSS 12.3 - Session management
+  session:
+    timeout-minutes: 15
+    max-active-sessions: 100
+
+# Logging Configuration for High Availability
+logging:
+  level:
+    root: WARN
+    com.psp.core: INFO
+    com.psp.core.security: DEBUG
+    com.psp.core.aspect: DEBUG
+    io.github.resilience4j: INFO
+    org.springframework.security: INFO
+    org.springframework.web: WARN
+    org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/psp-core-service.log
+    max-size: 10MB
+    max-history: 90
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 90
+
+# Management endpoints for Monitoring & Health Checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
+    bulkheads:
+      enabled: true
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+# Server configuration for HA
+server:
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+    accept-count: 100
+    connection-timeout: 30000
+  compression:
+    enabled: true
+    min-response-size: 1024
+    mime-types: text/html, text/xml, text/plain, text/css, text/javascript, application/javascript, application/json
+
+# HTTP client configuration for service-to-service calls
+http:
+  client:
+    connect-timeout: 10000
+    read-timeout: 30000
+    write-timeout: 30000

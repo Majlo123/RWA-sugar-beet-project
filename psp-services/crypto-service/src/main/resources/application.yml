@@ -1,0 +1,19 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: psp-crypto-service
+  data:
+    mongodb:
+      uri: mongodb://admin:super@crypto-mongo-db:27017/psp_crypto_db?authSource=admin
+
+crypto:
+  network: testnet
+  # CoinGecko free endpoint (no key) - includes both Bitcoin and Ethereum
+  rate-url: https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd,eur
+  default-vs: usd
+
+core:
+  update-method-url: http://core-service:8080/transactions/update-method/
+  update-status-url: http://core-service:8080/transactions/update-status/

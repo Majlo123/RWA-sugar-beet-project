@@ -1,0 +1,90 @@
+# High Availability & Resilience Configuration for API Gateway
+
+server:
+  port: 8080
+  ssl:
+    enabled: false
+  compression:
+    enabled: true
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      # Enable circuit breaker filter
+      httpclient:
+        connect-timeout: 10000
+        response-timeout: 30000
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        register-health-indicator: true
+        sliding-window-size: 100
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      core-service:
+        base-config: default
+      bank-service:
+        base-config: default
+      card-service:
+        base-config: default
+      paypal-service:
+        base-config: default
+      crypto-service:
+        base-config: default
+  
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 1000
+    instances:
+      gateway-retry:
+        max-attempts: 2
+  
+  bulkhead:
+    configs:
+      default:
+        max-concurrent-calls: 100
+        max-wait-duration: 10000
+    instances:
+      gateway-bulkhead:
+        max-concurrent-calls: 200
+
+logging:
+  level:
+    root: WARN
+    com.psp.gateway: INFO
+    org.springframework.cloud.gateway: INFO
+    io.github.resilience4j: INFO
+  file:
+    name: logs/api-gateway.log
+    max-size: 10MB
+    max-history: 90
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    circuitbreakers:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+server:
+  tomcat:
+    threads:
+      max: 300
+      min-spare: 20

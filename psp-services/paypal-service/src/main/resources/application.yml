@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: psp-paypal-service
+  
+  data:
+    mongodb:
+      uri: mongodb://admin:super@paypal-mongo-db:27017/psp_paypal_db?authSource=admin
+
+paypal:
+  # Get your credentials from https://developer.paypal.com/dashboard/applications
+  client:
+    id: ${PAYPAL_CLIENT_ID:AT7lOYcwTohSm-sT4KwkN37K_plKFakW-leQItphDIvcgXqBFjJhu5adyN9XU2uYO3tUNbveORSmcwna}
+    secret: ${PAYPAL_CLIENT_SECRET:EII8mHPbrd98MNpdly4ItLErZRC6715XnxdcWYdI2FJp_BXGrE02ytg-S2RpqqC0x-xXxP5ZmlmcOY3e}
+  mode: sandbox  # Use 'live' for production
+  # Sandbox URL: https://api-m.sandbox.paypal.com
+  # Live URL: https://api-m.paypal.com
+  api:
+    base-url: https://api-m.sandbox.paypal.com
+  # Your application URLs for return and cancel
+  return-url: ${PAYPAL_RETURN_URL:${PSP_FRONTEND_URL:https://localhost}/success}
+  cancel-url: ${PAYPAL_CANCEL_URL:${PSP_FRONTEND_URL:https://localhost}/failed}

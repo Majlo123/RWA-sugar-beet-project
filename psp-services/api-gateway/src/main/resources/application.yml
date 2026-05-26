@@ -1,0 +1,95 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  main:
+    web-application-type: reactive
+
+  cloud:
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+              - "http://localhost:4200"
+              - "http://localhost:3000"
+              - "https://localhost"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            exposedHeaders:
+              - Authorization
+              - X-Merchant-Id
+            allowCredentials: true
+      
+      # Definisanje ruta ka tvojim mikroservisima
+      routes:
+        # Auth routes (public) - handles /auth/* (nginx strips /api prefix)
+        - id: auth-service
+          uri: http://core-service:8080
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=0
+        
+        # Admin routes (protected - Super Admin only)
+        - id: admin-service
+          uri: http://core-service:8080
+          predicates:
+            - Path=/admin/**
+          filters:
+            - StripPrefix=0
+
+        # Rute za CORE servis (uključuje transakcije i QR kod)
+        - id: core-service
+          uri: http://core-service:8080
+          predicates:
+            - Path=/core/**, /transactions/**, /api/qr/**
+          filters:
+            - StripPrefix=1 # Ako Angular šalje /core/transactions, skida "core" i gađa direktno /transactions na 8080
+
+        # Rute za BANK servis
+        - id: bank-service
+          uri: http://bank-service:8080
+          predicates:
+            - Path=/bank/**
+          filters:
+            - StripPrefix=1
+
+        # Rute za CARD servis
+        - id: card-service
+          uri: http://card-service:8080
+          predicates:
+            - Path=/card/**
+          filters:
+            - StripPrefix=1
+
+        # Rute za PAYPAL servis
+        - id: paypal-service
+          uri: http://paypal-service:8080
+          predicates:
+            - Path=/paypal/**
+          filters:
+            - StripPrefix=1
+
+        # Rute za CRYPTO servis
+        - id: crypto-service
+          uri: http://crypto-service:8080
+          predicates:
+            - Path=/crypto/**
+          filters:
+            - StripPrefix=1
+
+# Logovanje za lakši debag tokom odbrane
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.http.server.reactive: DEBUG

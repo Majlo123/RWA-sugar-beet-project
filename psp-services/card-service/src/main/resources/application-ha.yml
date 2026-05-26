@@ -1,0 +1,84 @@
+# High Availability & Resilience Configuration for Card Service
+
+server:
+  port: 8080
+  ssl:
+    enabled: false
+  compression:
+    enabled: true
+    min-response-size: 1024
+
+spring:
+  application:
+    name: card-service
+  
+  datasource:
+    url: jdbc:postgresql://psp-card-db-primary:5432/psp_card_db
+    username: postgres
+    password: super
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        register-health-indicator: true
+        sliding-window-size: 100
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+    instances:
+      card-api:
+        base-config: default
+  
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 1000
+  
+  bulkhead:
+    configs:
+      default:
+        max-concurrent-calls: 100
+        max-wait-duration: 10000
+
+logging:
+  level:
+    root: WARN
+    com.psp.card: INFO
+    io.github.resilience4j: INFO
+  file:
+    name: logs/card-service.log
+    max-size: 10MB
+    max-history: 90
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    circuitbreakers:
+      enabled: true
+
+server:
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
