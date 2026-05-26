@@ -7,8 +7,9 @@ import {
   UserCheck, XCircle, ExternalLink,
 } from 'lucide-react';
 
-const SEPOLIA_ADDRESS_BASE = 'https://sepolia.etherscan.io/address/';
+const SEPOLIA_TX_BASE = 'https://sepolia.etherscan.io/tx/';
 import { getProfile } from '../services/userService';
+import { getPaymentHistory } from '../services/paymentService';
 import { useAuth } from '../context/AuthContext';
 import treasuryAbi from '../treasuryAbi.json';
 import beetAbi from '../beetAbi.json';
@@ -54,14 +55,40 @@ function ProfilePage() {
           investmentIds.map((id) => treasuryContract.investments(id)),
         );
 
+        // Fetch mint tx hashes from payment history (MINTED payments, oldest first)
+        let mintedTxHashes = [];
+        try {
+          const history = await getPaymentHistory();
+          mintedTxHashes = history
+            .filter((p) => p.status === 'MINTED' && p.txHash)
+            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+            .map((p) => p.txHash);
+        } catch { /* ignore */ }
+
+        // Fetch YieldClaimed events to get claim tx hashes keyed by investmentId
+        const claimFilter = treasuryContract.filters.YieldClaimed();
+        const claimEvents = await treasuryContract.queryFilter(claimFilter);
+        const claimTxByInvestmentId = {};
+        for (const ev of claimEvents) {
+          claimTxByInvestmentId[ev.args.investmentId.toString()] = ev.transactionHash;
+        }
+
+        // Sort investments by startTime ascending so they align with mintedTxHashes order
+        const mapped = investmentDetails.map((inv, index) => ({
+          id: investmentIds[index],
+          investor: inv[0],
+          amountUSD: inv[1],
+          startTime: inv[2],
+          maturesOn: inv[3],
+          isClaimed: inv[4],
+        }));
+        mapped.sort((a, b) => Number(a.startTime) - Number(b.startTime));
+
         setInvestments(
-          investmentDetails.map((inv, index) => ({
-            id: investmentIds[index],
-            investor: inv[0],
-            amountUSD: inv[1],
-            startTime: inv[2],
-            maturesOn: inv[3],
-            isClaimed: inv[4],
+          mapped.map((inv, index) => ({
+            ...inv,
+            mintTxHash: mintedTxHashes[index] ?? null,
+            claimTxHash: claimTxByInvestmentId[inv.id.toString()] ?? null,
           })),
         );
       } else {
@@ -323,15 +350,17 @@ function ProfilePage() {
                         <span className="flex items-center gap-1.5">
                           <Clock className="w-3.5 h-3.5" /> Matures {formatDate(inv.maturesOn)}
                         </span>
-                        <a
-                          href={`${SEPOLIA_ADDRESS_BASE}${inv.investor}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200 transition-colors font-semibold"
-                        >
-                          View on Etherscan
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
+                        {(inv.claimTxHash || inv.mintTxHash) && (
+                          <a
+                            href={`${SEPOLIA_TX_BASE}${inv.claimTxHash ?? inv.mintTxHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200 transition-colors font-semibold"
+                          >
+                            {inv.claimTxHash ? 'View Claim on Etherscan' : 'View on Etherscan'}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
                       </p>
                     </div>
                   </div>
