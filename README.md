@@ -1,40 +1,75 @@
-# RWA Sugar Beet Tokenization - Bachelor Thesis Project
+# RWA Sugar Beet Tokenization — Master's Thesis Project
 
-This repository contains the source code for a full-stack decentralized application developed as a diploma thesis. The project demonstrates the tokenization of real-world assets (RWA) using the example of investing in sugar beet production. The system allows investors to receive digital tokens as proof of their investment and claim a yield after a one-year cycle.
+This repository contains the source code for a full-stack decentralized application developed as a Master's thesis (extending the original Bachelor's thesis). The project demonstrates the tokenization of real-world assets (RWA) using the example of investing in sugar beet production. Investors receive ERC-20 tokens as proof of their investment and can claim a yield after a one-year cycle.
+
+## Master's Thesis — What's New
+
+The Master's thesis extends the original Bachelor's project with the following additions:
+
+* **Backend migrated from Node.js/Express to Go (Gin + GORM + go-ethereum)** — for better performance, type safety, and concurrency.
+* **PSP payment microservices** — a separate Spring Boot stack handling real card, PayPal, cryptocurrency, and QR payments (PCI DSS compliant: audit logging, PAN masking, AES encryption, password hashing).
+* **User-facing payment flow** — investors can now buy tokens directly through 4 payment methods (Card, PayPal, Crypto, QR), no longer dependent on manual admin recording.
+* **KYC (Know Your Customer)** — identity verification with document upload before users can invest.
+* **Advanced admin panel with analytics** — Recharts dashboard showing investment volume, user growth, token distribution, and revenue metrics.
+* **Full Docker stack** — entire system (BEET + PSP + databases + RabbitMQ) runs with one command.
+* **E2E test suite** — Playwright tests covering all backend endpoints, used to verify functional equivalence with the Bachelor's-era Node.js backend.
 
 ## Architecture Overview
 
-The system is designed with a modern full-stack architecture, separating concerns between the frontend, backend, and blockchain layers:
+The system is designed with a modern full-stack architecture, separating concerns between the frontend, backend, payment provider services, and blockchain layers:
 
-* **Frontend:** A single-page application built with **React**, providing the user interface for registration, login, viewing investments, and interacting with the blockchain via MetaMask.
-* **Backend:** A server built with **Node.js** and **Express.js**, responsible for user management, authentication with JWT, and handling secure administrative functions.
-* **Database:** A **PostgreSQL** database for storing user account information, including usernames, hashed passwords, and roles.
-* **Smart Contracts:** **Solidity** smart contracts deployed on the **Sepolia testnet**, which form the immutable on-chain logic of the system.
-* **Blockchain Interaction:** **Ethers.js** is used on both the frontend and backend to communicate with the Ethereum blockchain.
+* **Frontend:** A single-page application built with **React 19 + Vite + Tailwind CSS v4**, providing the user interface for registration, login, KYC, buying tokens, viewing investments, and interacting with the blockchain via MetaMask.
+* **Backend:** A REST API built with **Go (Gin + GORM + go-ethereum)**, responsible for user management, JWT authentication, KYC document storage, analytics aggregation, and orchestrating payments through the PSP.
+* **PSP (Payment Service Provider):** A Spring Boot microservice stack handling card, PayPal, cryptocurrency, and QR payments. Services communicate through an API Gateway with RabbitMQ for async messaging.
+* **Database:** **PostgreSQL** for the BEET backend (users, investments, KYC); per-service Postgres/MongoDB instances for PSP services.
+* **Smart Contracts:** **Solidity 0.8.x** contracts deployed on the **Sepolia testnet**, forming the immutable on-chain logic.
+* **Blockchain Interaction:** **go-ethereum** (backend) and **Ethers.js** (frontend) for communication with the Ethereum blockchain.
 
 ## Key Features
 
-Based on the project specification, the application implements the following features:
+### User-facing
+* **Registration & Login** with JWT authentication (1-hour expiry).
+* **MetaMask wallet binding** — frontend verifies the connected wallet matches the registered `ethAddress`.
+* **KYC verification** — users upload identity documents before being allowed to invest.
+* **Buy Tokens** — purchase BEET tokens through 4 payment methods (card, PayPal, crypto, QR), routed through the PSP stack.
+* **Payment history** — view all past payments with status and method.
+* **Investment portfolio** — view BEET token balance and individual investments (including Etherscan links to on-chain transactions).
+* **Yield claim** — after a one-year period (configurable, currently 20 seconds for testing), the investor calls `claimYield` on-chain through MetaMask.
 
-* **User Roles:** The system supports two main roles:
-    * **User (Investor):** Can register, log in, connect their MetaMask wallet, view their investment portfolio, and initiate a yield claim.
-    * **Admin:** Manages the system and confirms "off-chain" payments to mint tokens for investors.
-
-* **Investment Lifecycle:**
-    1.  **Registration & Login:** Users create an account which is stored in the PostgreSQL database.
-    2.  **Investment Simulation:** An administrator simulates an "off-chain" payment by using an admin panel to record an investment for a user. This action calls the `recordInvestment` function on the `Treasury` smart contract.
-    3.  **Token Minting:** The `Treasury` contract then calls the `mint` function on the `BEET` (ERC-20) token contract, issuing new tokens directly to the investor's wallet address.
-    4.  **Portfolio Viewing:** The investor can log in, connect their wallet, and view their `BEET` token balance and the status of their investments directly from the blockchain.
-    5.  **Yield Claim:** After a one-year period, the investor can call the `claimYield` function through the frontend, which updates the investment status on-chain.
+### Admin-facing
+* **Analytics dashboard** — Recharts-based panel showing investment volume over time, user growth, token distribution, KYC approval rates, revenue per payment method.
+* **KYC approval** — review and approve/reject submitted KYC documents.
+* **Manual investment recording** — fallback for off-chain payments (admin calls `Treasury.recordInvestment()` directly).
 
 ## Repository Structure
 
-This is a monorepo containing all three main components of the project:
+This is a monorepo containing all components of the project:
+
+```
+.
+├── backend/             # Go REST API (Gin + GORM + go-ethereum)
+│   └── tests/e2e/       # Playwright E2E tests
+├── frontend/            # React 19 + Vite SPA
+├── smart-contracts/     # Solidity contracts + Hardhat
+├── psp-services/        # PSP microservices (Spring Boot)
+│   ├── api-gateway/
+│   ├── core-service/
+│   ├── bank-service/
+│   ├── card-service/
+│   ├── paypal-service/
+│   └── crypto-service/
+├── docker/              # Dockerfiles and helper configs
+└── docker-compose.yml   # Full stack orchestration
+```
+
 ## Technology Stack
 
-* **Smart Contracts:** Solidity, Hardhat, OpenZeppelin
-* **Backend:** Node.js, Express.js, PostgreSQL, Sequelize, JWT, Bcrypt.js, Ethers.js
-* **Frontend:** React, Vite, Ethers.js, React Router
+* **Smart Contracts:** Solidity 0.8.x, Hardhat, OpenZeppelin (ERC-20, Ownable)
+* **Backend:** Go 1.25+, Gin, GORM, go-ethereum, JWT, bcrypt, PostgreSQL
+* **Frontend:** React 19, Vite, Tailwind CSS v4, Ethers.js, React Router, Recharts
+* **PSP:** Spring Boot 3, Spring Cloud Gateway, RabbitMQ, PostgreSQL, MongoDB
+* **DevOps:** Docker, Docker Compose
+* **Testing:** Playwright (e2e), Mocha + Chai (smart contracts)
 
 ## Quick Start with Docker (recommended)
 
@@ -87,6 +122,7 @@ To stop: `docker compose down`. To wipe data: `docker compose down -v`.
 ### Prerequisites
 * Go 1.25+
 * Node.js 20+ and npm
+* Java 17+ and Maven (for PSP services)
 * A running instance of PostgreSQL
 * MetaMask browser extension
 
@@ -101,9 +137,31 @@ To stop: `docker compose down`. To wipe data: `docker compose down -v`.
 1.  Navigate to the `backend` directory: `cd backend`
 2.  Create a `.env` file and configure your database connection, JWT secret, and the deployed `TREASURY_CONTRACT_ADDRESS` (see `.env.example` at the repo root).
 3.  Run the server: `go run ./cmd/server`
+4.  Swagger UI is available at http://localhost:5000/api-docs
 
 ### 3. Frontend
 1.  Navigate to the `frontend` directory: `cd frontend`
 2.  Install dependencies: `npm install`
-3.  Update the smart contract addresses in `src/pages/ProfilePage.jsx`.
-4.  Run the application: `npm run dev`
+3.  Run the application: `npm run dev`
+
+### 4. PSP services (optional — only needed for end-to-end payment testing)
+Each PSP service has its own `pom.xml` and runs independently. The Docker stack is the easier path; manual setup requires running each Spring Boot service plus its database. See `psp-services/README.md` (if present) or the individual service folders.
+
+## Running E2E Tests
+
+```bash
+cd backend/tests/e2e
+npm install
+npx playwright install chromium
+npm run test:e2e          # headless
+npm run test:e2e:headed   # visible browser (for swagger.spec.ts)
+npm run test:e2e:report   # open HTML report
+```
+
+Prerequisites: the Go backend must be running at http://localhost:5000 and PostgreSQL must be reachable.
+
+## Documentation
+
+* **API documentation** — Swagger UI at http://localhost:5000/api-docs (OpenAPI 3.0)
+* **Original Bachelor's thesis demo** — `Demo_diplomski_RA_64_2021.mp4`
+* **Original Bachelor's thesis presentation** — `Prezentacija_diplomski_RA_64_2021.pptx` (Serbian) and `Prototype-of-a-Blockchain-Based-Sugar-Beet-Tokenization-Platform.pdf` (English)
