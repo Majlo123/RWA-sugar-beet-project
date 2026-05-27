@@ -137,3 +137,6 @@ dist
 
 # Backend KYC document uploads (sensitive PII)
 backend/uploads/
+
+# Claude Code instructions (local only)
+CLAUDE.md
