@@ -5,22 +5,30 @@ import {
 } from 'recharts';
 import {
   RefreshCcw, TrendingUp, Coins, Users, Loader2,
-  CheckCircle2, AlertTriangle, Clock, Hash, ExternalLink,
+  CheckCircle2, AlertTriangle, Clock, Hash, ExternalLink, ShieldCheck,
 } from 'lucide-react';
 
 const POLYGON_ADDRESS_BASE = 'https://polygonscan.com/address/';
 import { getAnalytics } from '../../services/adminService';
 
 const STATUS_COLORS = {
-  Claimed: '#10b981',
-  Matured: '#f59e0b',
-  Pending: '#3b82f6',
+  Claimed: '#2e7d52',
+  Matured: '#d9a441',
+  Pending: '#3f6ca8',
 };
 
 const STATUS_META = {
   Claimed: { class: 'badge-success', Icon: CheckCircle2 },
   Matured: { class: 'badge-warning', Icon: AlertTriangle },
   Pending: { class: 'badge-info', Icon: Clock },
+};
+
+const CHART_TOOLTIP = {
+  background: '#ffffff',
+  border: '1px solid #ece6d9',
+  borderRadius: '12px',
+  boxShadow: '0 10px 30px -12px rgba(40,31,20,0.18)',
+  color: '#211e18',
 };
 
 const shortAddr = (a) => (a ? `${a.substring(0, 6)}…${a.substring(a.length - 4)}` : '');
@@ -97,10 +105,10 @@ function AnalyticsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-4 flex-wrap gap-4">
         <div>
-          <span className="eyebrow-amber mb-3 inline-flex items-center gap-1.5"><TrendingUp className="w-4 h-4" /> Admin Access</span>
-          <h1 className="text-5xl sm:text-6xl">Dashboard</h1>
+          <span className="eyebrow-honey mb-3 inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" /> Admin Access</span>
+          <h1 className="text-4xl sm:text-6xl mt-4">Dashboard</h1>
         </div>
         <button onClick={load} disabled={loading} className="btn-secondary text-sm mt-2">
           <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -112,23 +120,23 @@ function AnalyticsPage() {
 
       {loading && !analytics && (
         <div className="card-padded text-center py-16">
-          <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto" />
+          <Loader2 className="w-8 h-8 text-brand-500 animate-spin mx-auto" />
         </div>
       )}
 
       {summary && (
         <>
           <section className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-            <KpiCard label="Total Invested" value={`$${summary.totalUSDInvested.toLocaleString()}`} icon={TrendingUp} accent="emerald" />
-            <KpiCard label="BEET Minted" value={summary.totalBEETMinted.toLocaleString()} icon={Coins} accent="amber" />
-            <KpiCard label="Investments" value={summary.totalInvestments} icon={Hash} accent="blue" />
-            <KpiCard label="Active Investors" value={`${summary.uniqueInvestors} / ${summary.totalUsers}`} icon={Users} accent="emerald" />
+            <KpiCard label="Total Invested" value={`$${summary.totalUSDInvested.toLocaleString()}`} icon={TrendingUp} accent="brand" />
+            <KpiCard label="BEET Minted" value={summary.totalBEETMinted.toLocaleString()} icon={Coins} accent="honey" />
+            <KpiCard label="Investments" value={summary.totalInvestments} icon={Hash} accent="info" />
+            <KpiCard label="Active Investors" value={`${summary.uniqueInvestors} / ${summary.totalUsers}`} icon={Users} accent="brand" />
           </section>
 
           <section className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <StatusCard label="Claimed" value={summary.claimedCount} accent="emerald" icon={CheckCircle2} />
-            <StatusCard label="Ready to Claim" value={summary.maturedUnclaimedCount} accent="amber" icon={AlertTriangle} />
-            <StatusCard label="Pending" value={summary.pendingCount} accent="blue" icon={Clock} />
+            <StatusCard label="Claimed" value={summary.claimedCount} accent="brand" icon={CheckCircle2} />
+            <StatusCard label="Ready to Claim" value={summary.maturedUnclaimedCount} accent="honey" icon={AlertTriangle} />
+            <StatusCard label="Pending" value={summary.pendingCount} accent="info" icon={Clock} />
           </section>
 
           {summary.totalInvestments > 0 && (
@@ -149,18 +157,15 @@ function AnalyticsPage() {
                         labelLine={false}
                       >
                         {pieData.map((entry) => (
-                          <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} stroke="#0a0f1c" strokeWidth={2} />
+                          <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} stroke="#ffffff" strokeWidth={3} />
                         ))}
                       </Pie>
-                      <Tooltip
-                        contentStyle={{ background: '#1f2937', border: '1px solid #334155', borderRadius: '8px' }}
-                        labelStyle={{ color: '#e5e7eb' }}
-                      />
+                      <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={{ color: '#211e18' }} />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-slate-500 text-center py-12">No data.</p>
+                  <p className="text-faint text-center py-12">No data.</p>
                 )}
               </div>
 
@@ -169,19 +174,19 @@ function AnalyticsPage() {
                 {barData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={280}>
                     <BarChart data={barData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1f2a3d" />
-                      <XAxis dataKey="name" stroke="#64748b" fontSize={12} />
-                      <YAxis stroke="#64748b" fontSize={12} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ece6d9" />
+                      <XAxis dataKey="name" stroke="#9a9384" fontSize={12} />
+                      <YAxis stroke="#9a9384" fontSize={12} />
                       <Tooltip
-                        contentStyle={{ background: '#1f2937', border: '1px solid #334155', borderRadius: '8px' }}
-                        labelStyle={{ color: '#e5e7eb' }}
-                        cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
+                        contentStyle={CHART_TOOLTIP}
+                        labelStyle={{ color: '#211e18' }}
+                        cursor={{ fill: 'rgba(46, 125, 82, 0.08)' }}
                       />
-                      <Bar dataKey="USD" fill="#10b981" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="USD" fill="#2e7d52" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-slate-500 text-center py-12">No data.</p>
+                  <p className="text-faint text-center py-12">No data.</p>
                 )}
               </div>
             </section>
@@ -191,14 +196,14 @@ function AnalyticsPage() {
             <p className="section-title mb-3">Records</p>
             <h2 className="text-3xl sm:text-4xl mb-6">All Investments</h2>
             {sortedInvestments.length === 0 ? (
-              <div className="card-padded text-center py-12 text-slate-400">
+              <div className="card-padded text-center py-12 text-muted">
                 No investments recorded yet.
               </div>
             ) : (
               <div className="card overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-slate-900/60 text-[11px] uppercase tracking-[0.12em] text-slate-400 font-eyebrow">
+                  <table className="w-full text-sm min-w-[820px]">
+                    <thead className="bg-surface-soft text-[11px] uppercase tracking-[0.1em] text-faint">
                       <tr>
                         {[
                           ['id', 'ID'],
@@ -212,38 +217,38 @@ function AnalyticsPage() {
                           <th
                             key={key}
                             onClick={() => handleSort(key)}
-                            className="text-left px-4 py-4 cursor-pointer hover:bg-slate-800/60 select-none whitespace-nowrap font-bold"
+                            className="text-left px-4 py-3.5 cursor-pointer hover:text-brand-700 select-none whitespace-nowrap font-bold border-b border-line transition-colors"
                           >
                             {label}{sortIndicator(key)}
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800">
+                    <tbody className="divide-y divide-line">
                       {sortedInvestments.map((inv) => {
                         const status = investmentStatus(inv);
                         const meta = STATUS_META[status];
                         return (
-                          <tr key={inv.id} className="hover:bg-slate-800/30 transition-colors">
-                            <td className="px-4 py-4 text-slate-400 font-mono font-medium">#{inv.id}</td>
-                            <td className="px-4 py-4 font-display font-semibold text-white">{inv.username}</td>
-                            <td className="px-4 py-4 font-mono text-xs text-slate-400" title={inv.ethAddress}>
+                          <tr key={inv.id} className="hover:bg-cream-deep/60 transition-colors">
+                            <td className="px-4 py-3.5 text-faint font-mono font-medium">#{inv.id}</td>
+                            <td className="px-4 py-3.5 font-display font-semibold text-ink">{inv.username}</td>
+                            <td className="px-4 py-3.5 font-mono text-xs text-muted" title={inv.ethAddress}>
                               <a
                                 href={`${POLYGON_ADDRESS_BASE}${inv.ethAddress}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 hover:text-emerald-300 transition-colors"
+                                className="inline-flex items-center gap-1.5 hover:text-brand-700 transition-colors"
                               >
                                 {shortAddr(inv.ethAddress)}
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             </td>
-                            <td className="px-4 py-4 font-display font-bold text-emerald-300 tracking-tight">
+                            <td className="px-4 py-3.5 font-display font-semibold text-brand-700 tracking-tight">
                               ${inv.amountUSD.toLocaleString()}
                             </td>
-                            <td className="px-4 py-4 text-slate-400 whitespace-nowrap text-[13px]">{formatTs(inv.startTime)}</td>
-                            <td className="px-4 py-4 text-slate-400 whitespace-nowrap text-[13px]">{formatTs(inv.maturesOn)}</td>
-                            <td className="px-4 py-4">
+                            <td className="px-4 py-3.5 text-muted whitespace-nowrap text-[13px]">{formatTs(inv.startTime)}</td>
+                            <td className="px-4 py-3.5 text-muted whitespace-nowrap text-[13px]">{formatTs(inv.maturesOn)}</td>
+                            <td className="px-4 py-3.5">
                               <span className={meta.class}>
                                 <meta.Icon className="w-3 h-3" />
                                 {status}
@@ -267,20 +272,20 @@ function AnalyticsPage() {
 function KpiCard({ label, value, icon, accent }) {
   const IconCmp = icon;
   const accentColor = {
-    emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
-    amber: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
-    blue: 'text-blue-400 bg-blue-500/10 border-blue-500/30',
+    brand: 'text-brand-600 bg-brand-50 border-brand-200',
+    honey: 'text-honey-600 bg-honey-50 border-honey-100',
+    info: 'text-info bg-[#eaf0f8] border-[#cfdcef]',
   }[accent];
 
   return (
-    <div className="card-padded hover:border-slate-700 transition-colors">
+    <div className="card-padded card-hover">
       <div className="flex items-start justify-between mb-5">
         <p className="section-title">{label}</p>
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${accentColor}`}>
           <IconCmp className="w-5 h-5" />
         </div>
       </div>
-      <p className="font-display text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-none">{value}</p>
+      <p className="font-display text-3xl sm:text-4xl font-semibold text-ink tracking-tight leading-none">{value}</p>
     </div>
   );
 }
@@ -288,9 +293,9 @@ function KpiCard({ label, value, icon, accent }) {
 function StatusCard({ label, value, accent, icon }) {
   const IconCmp = icon;
   const styles = {
-    emerald: { bar: 'bg-emerald-500', text: 'text-emerald-400' },
-    amber: { bar: 'bg-amber-500', text: 'text-amber-400' },
-    blue: { bar: 'bg-blue-500', text: 'text-blue-400' },
+    brand: { bar: 'bg-brand-500', text: 'text-brand-600' },
+    honey: { bar: 'bg-honey-500', text: 'text-honey-600' },
+    info: { bar: 'bg-info', text: 'text-info' },
   }[accent];
   return (
     <div className="card-padded relative overflow-hidden">
@@ -298,7 +303,7 @@ function StatusCard({ label, value, accent, icon }) {
       <div className="flex items-center justify-between gap-2 pl-1">
         <div>
           <p className="section-title mb-2">{label}</p>
-          <p className="font-display text-4xl font-extrabold text-white tracking-tight leading-none">{value}</p>
+          <p className="font-display text-4xl font-semibold text-ink tracking-tight leading-none">{value}</p>
         </div>
         <IconCmp className={`w-8 h-8 ${styles.text}`} />
       </div>

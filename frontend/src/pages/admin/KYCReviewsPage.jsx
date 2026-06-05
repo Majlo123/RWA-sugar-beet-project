@@ -99,9 +99,9 @@ function KYCReviewsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="mb-8">
-        <span className="eyebrow-amber mb-3 inline-flex items-center gap-1.5"><ShieldCheck className="w-4 h-4" /> Admin Access</span>
-        <h1 className="text-5xl sm:text-6xl">KYC Reviews</h1>
+      <div className="mb-2">
+        <span className="eyebrow-honey mb-3 inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" /> Admin Access</span>
+        <h1 className="text-4xl sm:text-6xl mt-4">KYC Reviews</h1>
       </div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-wrap gap-2">
@@ -109,10 +109,10 @@ function KYCReviewsPage() {
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              className={`px-4 py-2 rounded-lg text-sm font-display font-bold transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors border ${
                 filter === f.value
-                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40'
-                  : 'bg-slate-800/40 text-slate-400 border border-slate-700 hover:text-slate-200'
+                  ? 'bg-brand-50 text-brand-700 border-brand-300'
+                  : 'bg-surface text-muted border-line-strong hover:text-brand-700 hover:border-brand-300'
               }`}
             >
               {f.label}
@@ -128,19 +128,22 @@ function KYCReviewsPage() {
       {error && <div className="alert-error">{error}</div>}
 
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <CountCard label="Pending" value={counts.pending} Icon={Clock} accent="blue" />
-        <CountCard label="Verified" value={counts.verified} Icon={CheckCircle2} accent="emerald" />
-        <CountCard label="Rejected" value={counts.rejected} Icon={XCircle} accent="rose" />
+        <CountCard label="Pending" value={counts.pending} Icon={Clock} accent="info" />
+        <CountCard label="Verified" value={counts.verified} Icon={CheckCircle2} accent="brand" />
+        <CountCard label="Rejected" value={counts.rejected} Icon={XCircle} accent="error" />
       </section>
 
       {loading && items.length === 0 ? (
         <div className="card-padded text-center py-16">
-          <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto" />
+          <Loader2 className="w-8 h-8 text-brand-500 animate-spin mx-auto" />
         </div>
       ) : items.length === 0 ? (
         <div className="card-padded text-center py-16">
-          <ShieldCheck className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <p className="text-slate-400">No KYC submissions to display.</p>
+          <div className="w-14 h-14 rounded-2xl bg-cream-deep border border-line flex items-center justify-center mx-auto mb-4">
+            <ShieldCheck className="w-7 h-7 text-faint" />
+          </div>
+          <p className="text-ink font-semibold text-lg">Nothing to review</p>
+          <p className="text-muted text-sm mt-1.5">No KYC submissions to display for this filter.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -151,14 +154,14 @@ function KYCReviewsPage() {
               <div key={it.userId} className="card-padded">
                 <div className="flex flex-col lg:flex-row lg:items-start gap-6">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-3 flex-wrap">
-                      <p className="font-display text-2xl font-extrabold tracking-tight">{it.username}</p>
+                    <div className="flex items-center gap-3 mb-4 flex-wrap">
+                      <p className="font-display text-2xl font-semibold tracking-tight text-ink">{it.username}</p>
                       <span className={meta.class}>
                         <meta.Icon className="w-3.5 h-3.5" />
                         {meta.label}
                       </span>
                     </div>
-                    <div className="grid sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                    <div className="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm">
                       <Field label="Full name" value={it.fullName} />
                       <Field
                         label="Document"
@@ -181,7 +184,7 @@ function KYCReviewsPage() {
                       {it.status === 'rejected' && (
                         <Field
                           label="Rejection reason"
-                          value={<span className="text-rose-300">{it.rejectionReason}</span>}
+                          value={<span className="text-error">{it.rejectionReason}</span>}
                         />
                       )}
                       {it.status === 'verified' && it.reviewedAt && (
@@ -219,7 +222,7 @@ function KYCReviewsPage() {
                         <button
                           onClick={() => openReject(it.userId)}
                           disabled={isBusy}
-                          className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-display font-bold text-sm bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                          className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold text-sm bg-[#fbeceb] text-[#a83a35] border border-[#f3d2d0] hover:bg-[#f7ddda] transition-colors disabled:opacity-50"
                         >
                           <XCircle className="w-4 h-4" />
                           Reject
@@ -236,7 +239,7 @@ function KYCReviewsPage() {
 
       {rejectModal.open && (
         <Modal onClose={closeReject} title="Reject KYC submission">
-          <p className="text-base text-slate-400 mb-4 font-light">
+          <p className="text-base text-muted mb-4">
             Provide a reason for the rejection. The user will see this message.
           </p>
           <textarea
@@ -251,7 +254,7 @@ function KYCReviewsPage() {
             <button
               onClick={submitReject}
               disabled={!rejectModal.reason.trim() || actionId === rejectModal.userId}
-              className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-display font-bold text-sm bg-rose-500 text-white hover:bg-rose-400 transition-colors disabled:opacity-50"
+              className="btn-danger text-sm"
             >
               {actionId === rejectModal.userId ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
@@ -265,7 +268,7 @@ function KYCReviewsPage() {
 
       {documentURL.url && (
         <Modal onClose={closeDocument} title="KYC document" wide>
-          <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-800">
+          <div className="bg-cream-deep rounded-xl overflow-hidden border border-line">
             <iframe
               src={documentURL.url}
               title="KYC document"
@@ -290,9 +293,9 @@ function KYCReviewsPage() {
 
 function CountCard({ label, value, Icon, accent }) {
   const styles = {
-    emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
-    blue: 'text-blue-400 bg-blue-500/10 border-blue-500/30',
-    rose: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
+    brand: 'text-brand-600 bg-brand-50 border-brand-200',
+    info: 'text-info bg-[#eaf0f8] border-[#cfdcef]',
+    error: 'text-error bg-[#fbeceb] border-[#f3d2d0]',
   }[accent];
   return (
     <div className="card-padded">
@@ -302,31 +305,31 @@ function CountCard({ label, value, Icon, accent }) {
           <Icon className="w-5 h-5" />
         </div>
       </div>
-      <p className="font-display text-4xl font-extrabold text-white tracking-tight leading-none">{value}</p>
+      <p className="font-display text-4xl font-semibold text-ink tracking-tight leading-none">{value}</p>
     </div>
   );
 }
 
 function Field({ label, value }) {
   return (
-    <div className="flex items-center justify-between gap-2 py-1">
-      <span className="text-slate-500 font-medium">{label}</span>
-      <span className="text-slate-200 text-right truncate">{value || '-'}</span>
+    <div className="flex items-center justify-between gap-2 py-1.5 border-b border-line/70 last:border-0">
+      <span className="text-muted font-medium">{label}</span>
+      <span className="text-ink text-right truncate">{value || '-'}</span>
     </div>
   );
 }
 
 function Modal({ children, onClose, title, wide }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className={`card relative w-full ${wide ? 'max-w-5xl' : 'max-w-xl'} p-6 sm:p-8`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm">
+      <div className={`card relative w-full ${wide ? 'max-w-5xl' : 'max-w-xl'} p-6 sm:p-8 animate-fade-in`}>
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-muted hover:text-ink hover:bg-cream-deep transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
-        <h3 className="text-2xl font-display font-extrabold tracking-tight mb-4">{title}</h3>
+        <h3 className="text-2xl font-display font-semibold tracking-tight mb-4">{title}</h3>
         {children}
       </div>
     </div>

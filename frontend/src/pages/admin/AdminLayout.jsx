@@ -1,5 +1,4 @@
 import { Outlet } from 'react-router-dom';
-import { ShieldCheck } from 'lucide-react';
 
 function AdminLayout() {
   return (
