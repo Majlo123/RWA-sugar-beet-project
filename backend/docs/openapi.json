@@ -112,53 +112,6 @@
         }
       }
     },
-    "/record-investment": {
-      "post": {
-        "summary": "Record a new investment (admin only)",
-        "tags": ["Treasury"],
-        "description": "Calls the recordInvestment function on the smart contract. The investor must have KYC status 'verified'.",
-        "security": [{ "bearerAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "investorAddress": {
-                    "type": "string",
-                    "description": "Investor's Ethereum address.",
-                    "example": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-                  },
-                  "amountUSD": {
-                    "type": "number",
-                    "description": "Investment amount in USD.",
-                    "example": 2000
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Transaction executed successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "txHash": { "type": "string", "example": "0x123abc..." }
-                  }
-                }
-              }
-            }
-          },
-          "500": { "description": "KYC not verified or error sending the transaction." }
-        }
-      }
-    },
     "/users/profile": {
       "get": {
         "summary": "Return data about the logged-in user",

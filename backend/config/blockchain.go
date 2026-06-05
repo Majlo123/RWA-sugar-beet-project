@@ -23,8 +23,8 @@ var (
 )
 
 func InitBlockchain() error {
-	rpcURL := os.Getenv("SEPOLIA_RPC_URL")
-	privateKeyHex := os.Getenv("SEPOLIA_PRIVATE_KEY")
+	rpcURL := os.Getenv("POLYGON_RPC_URL")
+	privateKeyHex := os.Getenv("POLYGON_PRIVATE_KEY")
 	contractAddrHex := os.Getenv("TREASURY_CONTRACT_ADDRESS")
 
 	client, err := ethclient.Dial(rpcURL)

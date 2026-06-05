@@ -98,6 +98,32 @@ func GetPaymentByID(c *gin.Context) {
 	c.JSON(http.StatusOK, payment)
 }
 
+func GetPaymentQRCode(c *gin.Context) {
+	claims, ok := currentUserClaims(c)
+	if !ok {
+		return
+	}
+
+	paymentID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil || paymentID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payment id."})
+		return
+	}
+
+	qr, err := services.GetPaymentQRCode(uint(paymentID), claims.ID)
+	if err != nil {
+		log.Printf("GetPaymentQRCode error: %v", err)
+		if errors.Is(err, services.ErrPaymentValidation) {
+			msg := strings.TrimPrefix(err.Error(), services.ErrPaymentValidation.Error()+": ")
+			c.JSON(http.StatusBadRequest, gin.H{"error": msg})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "A server error occurred."})
+		return
+	}
+	c.JSON(http.StatusOK, qr)
+}
+
 type simulatePaymentRequest struct {
 	Status string `json:"status"`
 	Reason string `json:"reason"`

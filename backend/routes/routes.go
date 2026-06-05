@@ -32,6 +32,7 @@ func RegisterRoutes(r *gin.Engine) {
 		payments.POST("/paypal/cancel", controllers.CancelPayPal)
 		payments.GET("/history", controllers.GetMyPaymentHistory)
 		payments.GET("/:id", controllers.GetPaymentByID)
+		payments.GET("/:id/qr-code", controllers.GetPaymentQRCode)
 	}
 
 	admin := r.Group("/admin")

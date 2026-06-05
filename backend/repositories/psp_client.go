@@ -276,6 +276,34 @@ func PSPCapturePayPalPayment(paypalPaymentID, payerID, merchantOrderID string) e
 	return nil
 }
 
+type PSPQRCodeResponse struct {
+	QRCode    string `json:"qrCode"`    // base64-encoded PNG
+	IPSString string `json:"ipsString"` // raw NBS IPS payload (contains RO:<pspTransactionId>)
+}
+
+// PSPGenerateQRCode asks the PSP core-service to generate the NBS IPS QR code
+// for a transaction. The mobile banking app scans this QR, extracts the
+// reference (RO:) and confirms the payment on the PSP directly.
+func PSPGenerateQRCode(pspTransactionID int64) (*PSPQRCodeResponse, error) {
+	url := fmt.Sprintf("%s/core/api/qr/generate/%d", pspGatewayURL(), pspTransactionID)
+	resp, err := pspHTTPClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("PSP QR generate request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("PSP QR generate returned %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	var result PSPQRCodeResponse
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, fmt.Errorf("decode PSP QR response: %w", err)
+	}
+	return &result, nil
+}
+
 // PSPGetTransactionStatus polls the PSP for the current status of a transaction.
 func PSPGetTransactionStatus(pspTransactionID int64) (*PSPTransactionStatus, error) {
 	url := fmt.Sprintf("%s/core/transactions/%d", pspGatewayURL(), pspTransactionID)

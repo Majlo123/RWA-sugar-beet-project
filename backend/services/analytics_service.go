@@ -1,9 +1,11 @@
 package services
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
+	"github.com/Majlo123/sugar-beet-backend/config"
 	"github.com/Majlo123/sugar-beet-backend/repositories"
 )
 
@@ -46,6 +48,10 @@ type AnalyticsResponse struct {
 }
 
 func GetAdminAnalytics() (*AnalyticsResponse, error) {
+	if config.TreasuryContract == nil {
+		return nil, fmt.Errorf("blockchain not connected — restart the server and check POLYGON_RPC_URL")
+	}
+
 	users, err := repositories.GetAllUsers()
 	if err != nil {
 		return nil, err

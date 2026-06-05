@@ -37,7 +37,7 @@ type Investment struct {
 }
 
 func GetInvestmentIdsForInvestor(investor string) ([]*big.Int, error) {
-	out := []interface{}{new([]*big.Int)}
+	out := []interface{}{}
 	err := config.TreasuryContract.Call(
 		&bind.CallOpts{Context: context.Background()},
 		&out,
@@ -47,11 +47,14 @@ func GetInvestmentIdsForInvestor(investor string) ([]*big.Int, error) {
 	if err != nil {
 		return nil, fmt.Errorf("call getInvestmentIdsForInvestor: %w", err)
 	}
-	idsPtr, ok := out[0].(*[]*big.Int)
-	if !ok {
-		return nil, fmt.Errorf("unexpected return type from getInvestmentIdsForInvestor")
+	if len(out) == 0 {
+		return []*big.Int{}, nil
 	}
-	return *idsPtr, nil
+	ids, ok := out[0].([]*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("unexpected return type from getInvestmentIdsForInvestor: %T", out[0])
+	}
+	return ids, nil
 }
 
 func GetInvestmentByID(id *big.Int) (*Investment, error) {
