@@ -4,7 +4,7 @@ import { Bitcoin, Copy, Loader2, AlertTriangle, Check } from 'lucide-react';
 import { getPaymentById, simulatePayment } from '../../services/paymentService';
 
 const DEMO_ADDRESS = '0x742d35Cc6634C0532925a3b844Bc454e4438f44e';
-const ETH_USD_RATE = 3500;
+const POL_USD_RATE = 0.45;
 
 function CryptoPaymentPage() {
   const { id } = useParams();
@@ -30,9 +30,9 @@ function CryptoPaymentPage() {
     })();
   }, [id, payment]);
 
-  const ethAmount = useMemo(() => {
+  const polAmount = useMemo(() => {
     if (!payment) return '0';
-    return (payment.amountUSD / ETH_USD_RATE).toFixed(6);
+    return (payment.amountUSD / POL_USD_RATE).toFixed(2);
   }, [payment]);
 
   const copyAddress = async () => {
@@ -94,14 +94,14 @@ function CryptoPaymentPage() {
         </span>
         <h1 className="text-5xl">Pay with Crypto</h1>
         <p className="text-lg text-slate-400 mt-4 font-light">
-          Send the exact amount to the address below. The transaction is monitored on-chain.
+          Send the exact amount to the address below on the Polygon network. The transaction is monitored on-chain.
         </p>
       </div>
 
       <div className="card-padded space-y-5">
         <div className="text-center p-6 rounded-xl bg-amber-500/5 border border-amber-500/30">
           <p className="font-eyebrow text-xs uppercase tracking-[0.15em] text-amber-300/80 mb-2 font-bold">Send</p>
-          <p className="font-display text-4xl font-extrabold gradient-text">{ethAmount} ETH</p>
+          <p className="font-display text-4xl font-extrabold gradient-text">{polAmount} POL</p>
           <p className="text-sm text-slate-400 mt-1">≈ ${Number(payment.amountUSD).toLocaleString()} USD</p>
         </div>
 

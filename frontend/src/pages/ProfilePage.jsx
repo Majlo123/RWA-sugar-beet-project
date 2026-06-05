@@ -7,10 +7,10 @@ import {
   UserCheck, XCircle, ExternalLink,
 } from 'lucide-react';
 
-const SEPOLIA_TX_BASE = 'https://sepolia.etherscan.io/tx/';
+const POLYGON_TX_BASE = 'https://polygonscan.com/tx/';
 import { getProfile } from '../services/userService';
 import { getPaymentHistory } from '../services/paymentService';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, ensurePolygonNetwork } from '../context/AuthContext';
 import treasuryAbi from '../treasuryAbi.json';
 import beetAbi from '../beetAbi.json';
 
@@ -21,8 +21,8 @@ const KYC_BADGE = {
   none:     { label: 'Not submitted', class: 'badge-warning', Icon: AlertTriangle },
 };
 
-const treasuryAddress = "0x0aE63859cCb63c6c031d1Ab93CE9Ba8a2AD41c83";
-const beetAddress = "0x9d00209F07042cF2F337570ea4c87c860525a638";
+const treasuryAddress = "0x74b5B77E912db132A814E63955Cd4538f4Fa697D";
+const beetAddress = "0x20C9F172583F02202c6E17E08f64cefa8A4dc20c";
 
 const formatDate = (ts) => new Date(Number(ts) * 1000).toLocaleString();
 
@@ -43,6 +43,7 @@ function ProfilePage() {
       setUserProfile(profileData);
 
       if (window.ethereum) {
+        await ensurePolygonNetwork();
         const provider = new ethers.BrowserProvider(window.ethereum);
         const beetContract = new ethers.Contract(beetAddress, beetAbi, provider);
         const treasuryContract = new ethers.Contract(treasuryAddress, treasuryAbi, provider);
@@ -352,12 +353,12 @@ function ProfilePage() {
                         </span>
                         {(inv.claimTxHash || inv.mintTxHash) && (
                           <a
-                            href={`${SEPOLIA_TX_BASE}${inv.claimTxHash ?? inv.mintTxHash}`}
+                            href={`${POLYGON_TX_BASE}${inv.claimTxHash ?? inv.mintTxHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200 transition-colors font-semibold"
                           >
-                            {inv.claimTxHash ? 'View Claim on Etherscan' : 'View on Etherscan'}
+                            {inv.claimTxHash ? 'View Claim on Polygonscan' : 'View on Polygonscan'}
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         )}

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { History, Loader2, ExternalLink, ArrowRight } from 'lucide-react';
 import { getPaymentHistory } from '../services/paymentService';
 
-const SEPOLIA_TX_BASE = 'https://sepolia.etherscan.io/tx/';
+const POLYGON_TX_BASE = 'https://polygonscan.com/tx/';
 
 const STATUS_STYLES = {
   PENDING:     'bg-slate-500/10 text-slate-300 border-slate-500/30',
@@ -87,7 +87,7 @@ function PaymentHistoryPage() {
                   <Td>
                     {p.txHash ? (
                       <a
-                        href={`${SEPOLIA_TX_BASE}${p.txHash}`}
+                        href={`${POLYGON_TX_BASE}${p.txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200"

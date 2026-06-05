@@ -159,7 +159,7 @@ function Layout() {
                 <ExternalLink className="w-4 h-4" />
                 GitHub
               </a>
-              <span className="font-eyebrow uppercase tracking-[0.15em] text-xs font-semibold text-slate-500">Sepolia Testnet</span>
+              <span className="font-eyebrow uppercase tracking-[0.15em] text-xs font-semibold text-slate-500">Polygon</span>
             </div>
           </div>
         </div>

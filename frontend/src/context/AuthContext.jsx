@@ -3,6 +3,36 @@ import { getProfile } from '../services/userService';
 
 const AuthContext = createContext(null);
 
+const POLYGON_CHAIN_ID = '0x89'; // 137 decimal
+
+export async function ensurePolygonNetwork() {
+  if (!window.ethereum) return;
+  const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+  if (chainId === POLYGON_CHAIN_ID) return;
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: POLYGON_CHAIN_ID }],
+    });
+  } catch (err) {
+    // Chain not added yet in MetaMask — add it automatically
+    if (err.code === 4902) {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: POLYGON_CHAIN_ID,
+          chainName: 'Polygon PoS',
+          nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+          rpcUrls: ['https://polygon-rpc.com'],
+          blockExplorerUrls: ['https://polygonscan.com'],
+        }],
+      });
+    } else {
+      throw err;
+    }
+  }
+}
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [account, setAccount] = useState(null);
@@ -32,6 +62,7 @@ export const AuthProvider = ({ children }) => {
       return;
     }
     try {
+      await ensurePolygonNetwork();
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       if (accounts.length === 0) return;
 

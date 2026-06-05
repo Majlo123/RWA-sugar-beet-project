@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 const METHODS = [
   { id: 'BANK',   label: 'Card / Bank',  description: 'Visa, MasterCard or local card',     Icon: CreditCard },
   { id: 'PAYPAL', label: 'PayPal',       description: 'PayPal sandbox flow',                 Icon: Wallet     },
-  { id: 'CRYPTO', label: 'Crypto',       description: 'Pay with ETH or BTC',                 Icon: Bitcoin    },
+  { id: 'CRYPTO', label: 'Crypto',       description: 'Pay with POL on Polygon',             Icon: Bitcoin    },
   { id: 'QR',     label: 'QR Code',      description: 'Scan with a mobile banking app',      Icon: QrCode     },
 ];
 
@@ -119,24 +119,27 @@ function BuyTokensPage() {
             <div>
               <label className="label">Payment method</label>
               <div className="grid sm:grid-cols-2 gap-3">
-                {METHODS.map(({ id, label, description }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setMethod(id)}
-                    className={`text-left p-4 rounded-xl border transition flex gap-3 items-start ${
-                      method === id
-                        ? 'border-emerald-400 bg-emerald-500/10 shadow-lg shadow-emerald-500/10'
-                        : 'border-slate-700 bg-slate-900/60 hover:border-slate-500'
-                    }`}
-                  >
-                    <Icon className={`w-6 h-6 mt-0.5 ${method === id ? 'text-emerald-300' : 'text-slate-300'}`} />
-                    <div>
-                      <p className="font-display font-bold text-slate-100">{label}</p>
-                      <p className="text-xs text-slate-400 mt-1">{description}</p>
-                    </div>
-                  </button>
-                ))}
+                {METHODS.map(({ id, label, description, Icon }) => {
+                  const IconCmp = Icon;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setMethod(id)}
+                      className={`text-left p-4 rounded-xl border transition flex gap-3 items-start ${
+                        method === id
+                          ? 'border-emerald-400 bg-emerald-500/10 shadow-lg shadow-emerald-500/10'
+                          : 'border-slate-700 bg-slate-900/60 hover:border-slate-500'
+                      }`}
+                    >
+                      <IconCmp className={`w-6 h-6 mt-0.5 ${method === id ? 'text-emerald-300' : 'text-slate-300'}`} />
+                      <div>
+                        <p className="font-display font-bold text-slate-100">{label}</p>
+                        <p className="text-xs text-slate-400 mt-1">{description}</p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -181,7 +184,7 @@ function BuyTokensPage() {
                 <p className="text-sm text-slate-400 leading-relaxed">
                   We process your payment through a PCI-DSS compliant Payment Service Provider.
                   Once payment is confirmed, the Treasury contract mints BEET tokens directly to
-                  your wallet on the Sepolia network.
+                  your wallet on the Polygon network.
                 </p>
               </div>
             </div>

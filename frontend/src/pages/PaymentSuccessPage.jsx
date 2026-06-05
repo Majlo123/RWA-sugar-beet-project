@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, Loader2, ExternalLink, ArrowRight, AlertTriangle } from 'lucide-react';
 import { confirmPayment } from '../services/paymentService';
 
-const SEPOLIA_TX_BASE = 'https://sepolia.etherscan.io/tx/';
+const POLYGON_TX_BASE = 'https://polygonscan.com/tx/';
 
 function PaymentSuccessPage() {
   const [params] = useSearchParams();
@@ -62,7 +62,7 @@ function PaymentSuccessPage() {
         <div className="card-padded text-center space-y-4">
           <Loader2 className="w-12 h-12 text-emerald-400 animate-spin mx-auto" />
           <h2 className="text-3xl">{status === 'PAID' ? 'Payment confirmed — minting tokens…' : 'Verifying payment…'}</h2>
-          <p className="text-slate-400">This may take a few seconds while the Treasury contract mints your BEET tokens on Sepolia.</p>
+          <p className="text-slate-400">This may take a few seconds while the Treasury contract mints your BEET tokens on Polygon.</p>
         </div>
       </div>
     );
@@ -75,19 +75,19 @@ function PaymentSuccessPage() {
           <div className="text-center space-y-3">
             <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto" />
             <h1 className="text-4xl">Tokens minted</h1>
-            <p className="text-slate-400">Your BEET tokens are now in your wallet on Sepolia.</p>
+            <p className="text-slate-400">Your BEET tokens are now in your wallet on Polygon.</p>
           </div>
           {txHash && (
             <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-5 space-y-2">
               <p className="text-xs uppercase tracking-wider text-emerald-300/80 font-bold">Transaction</p>
               <p className="font-mono text-xs text-emerald-200 break-all">{txHash}</p>
               <a
-                href={`${SEPOLIA_TX_BASE}${txHash}`}
+                href={`${POLYGON_TX_BASE}${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-sm font-display font-bold text-emerald-300 hover:text-emerald-200 transition-colors"
               >
-                View on Etherscan
+                View on Polygonscan
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>

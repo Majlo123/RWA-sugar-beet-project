@@ -8,7 +8,7 @@ import {
   CheckCircle2, AlertTriangle, Clock, Hash, ExternalLink,
 } from 'lucide-react';
 
-const SEPOLIA_ADDRESS_BASE = 'https://sepolia.etherscan.io/address/';
+const POLYGON_ADDRESS_BASE = 'https://polygonscan.com/address/';
 import { getAnalytics } from '../../services/adminService';
 
 const STATUS_COLORS = {
@@ -229,7 +229,7 @@ function AnalyticsPage() {
                             <td className="px-4 py-4 font-display font-semibold text-white">{inv.username}</td>
                             <td className="px-4 py-4 font-mono text-xs text-slate-400" title={inv.ethAddress}>
                               <a
-                                href={`${SEPOLIA_ADDRESS_BASE}${inv.ethAddress}`}
+                                href={`${POLYGON_ADDRESS_BASE}${inv.ethAddress}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 hover:text-emerald-300 transition-colors"

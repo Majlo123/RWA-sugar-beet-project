@@ -20,7 +20,7 @@ function HomePage() {
         <div className="text-center max-w-4xl mx-auto">
           <span className="eyebrow mb-8">
             <Sparkles className="w-4 h-4" />
-            On Ethereum Sepolia · ERC-20 BEET token
+            On Polygon · ERC-20 BEET token
           </span>
 
           <h1 className="text-balance text-6xl sm:text-7xl xl:text-8xl font-extrabold mb-8 leading-[1.05]">
@@ -65,7 +65,7 @@ function HomePage() {
           { label: 'Token Price', value: '$1,000', sub: 'per BEET' },
           { label: 'Yield', value: '10%', sub: 'per cycle' },
           { label: 'Cycle Length', value: '1 year', sub: 'lock period' },
-          { label: 'Network', value: 'Sepolia', sub: 'Ethereum testnet' },
+          { label: 'Network', value: 'Polygon', sub: 'Polygon PoS mainnet' },
         ].map((s) => (
           <div key={s.label} className="card-padded text-center hover:border-emerald-500/30 transition-colors">
             <p className="section-title mb-3">{s.label}</p>
