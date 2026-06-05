@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp"
+    android:background="#F8FAFC"
+    tools:context=".MainActivity">
+
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="@android:drawable/ic_menu_camera"
+        android:layout_marginBottom="16dp"
+        app:tint="#2B6CB0" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="mBanking Simulator"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#2D3748" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Skenirajte IPS QR kod sa PSP ekrana"
+        android:textSize="16sp"
+        android:textColor="#718096"
+        android:layout_marginBottom="40dp"
+        android:textAlignment="center" /> <Button
+    android:id="@+id/btnScan"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:text="📷 SKENIRAJ I PLATI"
+    android:textSize="18sp"
+    android:textStyle="bold"
+    android:backgroundTint="#48BB78"
+    android:textColor="@android:color/white"
+    app:cornerRadius="12dp" />
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Spreman za skeniranje"
+        android:textColor="#A0AEC0"
+        android:textSize="14sp" />
+
+</LinearLayout>
