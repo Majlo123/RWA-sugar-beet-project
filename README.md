@@ -22,7 +22,7 @@ The system is designed with a modern full-stack architecture, separating concern
 * **Backend:** A REST API built with **Go (Gin + GORM + go-ethereum)**, responsible for user management, JWT authentication, KYC document storage, analytics aggregation, and orchestrating payments through the PSP.
 * **PSP (Payment Service Provider):** A Spring Boot microservice stack handling card, PayPal, cryptocurrency, and QR payments. Services communicate through an API Gateway with RabbitMQ for async messaging.
 * **Database:** **PostgreSQL** for the BEET backend (users, investments, KYC); per-service Postgres/MongoDB instances for PSP services.
-* **Smart Contracts:** **Solidity 0.8.x** contracts deployed on the **Sepolia testnet**, forming the immutable on-chain logic.
+* **Smart Contracts:** **Solidity 0.8.x** contracts deployed on the **Polygon PoS network**, forming the immutable on-chain logic.
 * **Blockchain Interaction:** **go-ethereum** (backend) and **Ethers.js** (frontend) for communication with the Ethereum blockchain.
 
 ## Key Features
@@ -83,7 +83,7 @@ The entire stack — BEET (Go backend + React frontend + PostgreSQL) **and** the
 1.  Copy the env template and fill in your secrets:
     ```bash
     cp .env.example .env
-    # edit .env: SEPOLIA_RPC_URL, SEPOLIA_PRIVATE_KEY, JWT_SECRET, TREASURY_CONTRACT_ADDRESS
+    # edit .env: POLYGON_RPC_URL, POLYGON_PRIVATE_KEY, JWT_SECRET, TREASURY_CONTRACT_ADDRESS
     ```
 2.  Build and start the whole stack:
     ```bash
@@ -129,9 +129,9 @@ To stop: `docker compose down`. To wipe data: `docker compose down -v`.
 ### 1. Smart Contracts
 1.  Navigate to the `smart-contracts` directory: `cd smart-contracts`
 2.  Install dependencies: `npm install`
-3.  Create a `.env` file and add your `SEPOLIA_RPC_URL` and `SEPOLIA_PRIVATE_KEY`.
+3.  Create a `.env` file and add your `POLYGON_RPC_URL` and `POLYGON_PRIVATE_KEY`.
 4.  Compile the contracts: `npx hardhat compile`
-5.  Deploy to Sepolia: `npx hardhat run scripts/deploy.js --network sepolia`
+5.  Deploy to Polygon: `npx hardhat run scripts/deploy.js --network polygon`
 
 ### 2. Backend (Go)
 1.  Navigate to the `backend` directory: `cd backend`

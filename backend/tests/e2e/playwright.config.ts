@@ -11,15 +11,15 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   use: {
     baseURL: 'http://localhost:5000',
-    extraHTTPHeaders: {
-      'Content-Type': 'application/json',
-    },
+    // Content-Type is set per-request by Playwright (application/json for `data`,
+    // multipart/form-data for `multipart`). Setting it globally would break the
+    // KYC submission tests, which upload a file.
     trace: 'on-first-retry',
   },
   projects: [
     {
       name: 'api',
-      testMatch: /(auth|users|treasury|admin)\.spec\.ts/,
+      testMatch: /(auth|users|treasury|admin|payments|kyc)\.spec\.ts/,
     },
     {
       name: 'browser',

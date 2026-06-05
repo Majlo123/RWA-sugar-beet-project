@@ -9,17 +9,21 @@ test.describe('Swagger / OpenAPI documentation', () => {
     const apiTitle = page.locator('.info .title, h2.title');
     await expect(apiTitle.first()).toContainText('Sugar Beet Token API');
 
-    for (const tag of ['Auth', 'Treasury', 'Users', 'Admin']) {
-      await expect(page.getByRole('heading', { name: new RegExp(tag, 'i') })).toBeVisible();
+    for (const tag of ['Auth', 'Treasury', 'Users', 'Admin', 'KYC']) {
+      await expect(
+        page.getByRole('heading', { name: new RegExp(tag, 'i') }).first(),
+      ).toBeVisible();
     }
 
     const expectedPaths = [
       '/auth/register',
       '/auth/login',
       '/users/profile',
+      '/users/kyc',
+      '/users/kyc/submit',
       '/token-price',
-      '/record-investment',
       '/admin/analytics',
+      '/admin/kyc',
     ];
     const dom = await page.content();
     for (const p of expectedPaths) {
@@ -37,8 +41,11 @@ test.describe('Swagger / OpenAPI documentation', () => {
     expect(body.paths).toHaveProperty('/auth/register');
     expect(body.paths).toHaveProperty('/auth/login');
     expect(body.paths).toHaveProperty('/users/profile');
+    expect(body.paths).toHaveProperty('/users/kyc');
+    expect(body.paths).toHaveProperty('/users/kyc/submit');
     expect(body.paths).toHaveProperty('/token-price');
-    expect(body.paths).toHaveProperty('/record-investment');
     expect(body.paths).toHaveProperty('/admin/analytics');
+    expect(body.paths).toHaveProperty('/admin/kyc');
+    expect(body.paths).not.toHaveProperty('/record-investment');
   });
 });
