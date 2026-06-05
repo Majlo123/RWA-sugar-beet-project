@@ -13,8 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Service to check Ethereum testnet transactions
- * - Ethereum: Checks txHash directly (MetaMask sends tx)
+ * Service to check Polygon transactions
+ * - Polygon: Checks txHash directly (MetaMask sends tx)
  */
 @Service
 public class BlockchainMonitorService {
@@ -33,7 +33,7 @@ public class BlockchainMonitorService {
 
     /**
      * Check if payment has been received for given address using appropriate blockchain API
-     * - Ethereum: Checks if txHash exists (MetaMask already confirmed)
+     * - Polygon: Checks if txHash exists (MetaMask already confirmed)
      */
     public Map<String, Object> checkPayment(String address) {
         System.out.println("🔍 Checking payment for address: " + address);
@@ -43,8 +43,8 @@ public class BlockchainMonitorService {
             CryptoTransaction transaction = repository.findByBtcAddress(address)
                     .orElseThrow(() -> new RuntimeException("Transaction not found"));
 
-            // Only support Ethereum
-            return checkEthereumPayment(address, transaction, result);
+            // Only support Polygon
+            return checkPolygonPayment(address, transaction, result);
         } catch (Exception e) {
             result.put("error", "Error checking payment: " + e.getMessage());
             result.put("message", "Error while checking the payment");
@@ -54,22 +54,22 @@ public class BlockchainMonitorService {
     }
 
     /**
-     * Check Ethereum payment - if MetaMask sent a tx, it's already confirmed
+     * Check Polygon payment - if MetaMask sent a tx, it's already confirmed
      */
-    private Map<String, Object> checkEthereumPayment(String address, CryptoTransaction transaction, Map<String, Object> result) {
+    private Map<String, Object> checkPolygonPayment(String address, CryptoTransaction transaction, Map<String, Object> result) {
         try {
             result.put("address", address);
-            result.put("network", "sepolia");
-            result.put("type", "ETH");
+            result.put("network", "polygon");
+            result.put("type", "POL");
 
-            // For Ethereum, MetaMask already confirmed the transaction
+            // For Polygon, MetaMask already confirmed the transaction
             // We just need to check if a txHash was recorded
             if (transaction.getTxHash() != null && !transaction.getTxHash().isEmpty()) {
                 // Transaction was sent via MetaMask and is confirmed
                 result.put("paymentConfirmed", true);
-                result.put("confirmations", 2); // At least 2 confirmations on Sepolia
+                result.put("confirmations", 2); // At least 2 confirmations on Polygon
                 result.put("txHash", transaction.getTxHash());
-                result.put("message", "✅ Ethereum transaction confirmed!");
+                result.put("message", "✅ Polygon transaction confirmed!");
                 result.put("status", "COMPLETED");
 
                 // Mark as COMPLETED if not already
@@ -81,19 +81,19 @@ public class BlockchainMonitorService {
 
                     // Notify Core Service
                     notifyCoreSuccess(transaction.getMerchantOrderId(), transaction.getTxHash());
-                    System.out.println("✅ ETH payment confirmed: " + transaction.getTxHash());
+                    System.out.println("✅ POL payment confirmed: " + transaction.getTxHash());
                 }
             } else {
                 // No tx sent yet via MetaMask
                 result.put("paymentConfirmed", false);
-                result.put("message", "Waiting for the ETH transaction from MetaMask...");
+                result.put("message", "Waiting for the POL transaction from MetaMask...");
             }
 
             return result;
         } catch (Exception e) {
-            System.err.println("❌ Ethereum check error: " + e.getMessage());
-            result.put("error", "Ethereum check error: " + e.getMessage());
-            result.put("message", "Error while checking the ETH transaction");
+            System.err.println("❌ Polygon check error: " + e.getMessage());
+            result.put("error", "Polygon check error: " + e.getMessage());
+            result.put("message", "Error while checking the POL transaction");
             result.put("paymentConfirmed", false);
             return result;
         }

@@ -62,17 +62,17 @@ public class CryptoService {
         // 1) Update Core with payment method
         updateCoreMethod(request.getPspTransactionId());
 
-        // 2) Determine crypto type (default to ETH for faster confirmations)
-        String cryptoType = request.getCryptoType() == null || request.getCryptoType().trim().isEmpty() 
-                ? "ETH" : request.getCryptoType().trim().toUpperCase();
+        // 2) Determine crypto type (default to POL on Polygon for faster, cheaper confirmations)
+        String cryptoType = request.getCryptoType() == null || request.getCryptoType().trim().isEmpty()
+                ? "POL" : request.getCryptoType().trim().toUpperCase();
 
         // 3) Route to appropriate crypto handler
         if ("BTC".equals(cryptoType)) {
             return createBitcoinPayment(request);
-        } else if ("ETH".equals(cryptoType)) {
-            return createEthereumPayment(request);
+        } else if ("POL".equals(cryptoType)) {
+            return createPolygonPayment(request);
         } else {
-            throw new RuntimeException("Unsupported crypto type: " + cryptoType + ". Use BTC or ETH.");
+            throw new RuntimeException("Unsupported crypto type: " + cryptoType + ". Use BTC or POL.");
         }
     }
 
@@ -124,21 +124,21 @@ public class CryptoService {
         );
     }
 
-    private CryptoPaymentResponse createEthereumPayment(CryptoPaymentRequest request) {
+    private CryptoPaymentResponse createPolygonPayment(CryptoPaymentRequest request) {
         try {
-            // 1) Fetch ETH rates
-            Rates rates = fetchRates("ethereum");
+            // 1) Fetch POL rates
+            Rates rates = fetchRates("matic-network");
 
-            // 2) Convert fiat to ETH
-            double ethAmount = convertToCrypto(request.getAmount(), request.getCurrency(), rates);
+            // 2) Convert fiat to POL
+            double polAmount = convertToCrypto(request.getAmount(), request.getCurrency(), rates);
 
-            // 3) Generate Ethereum address (Sepolia testnet)
+            // 3) Generate Polygon address (EVM-compatible, same format as Ethereum)
             Credentials credentials = Credentials.create(Keys.createEcKeyPair());
             String address = credentials.getAddress();
             String privateKey = credentials.getEcKeyPair().getPrivateKey().toString(16);
 
-            // 4) Build QR data (EIP-681 format)
-            String qrData = "ethereum:" + address + "?value=" + formatCrypto(ethAmount * 1e18); // Wei
+            // 4) Build QR data (EIP-681 format, Polygon PoS chainId 137)
+            String qrData = "ethereum:" + address + "@137?value=" + formatCrypto(polAmount * 1e18); // Wei
 
             // 5) Save transaction to MongoDB
             CryptoTransaction transaction = new CryptoTransaction();
@@ -146,9 +146,9 @@ public class CryptoService {
             transaction.setMerchantOrderId(request.getMerchantOrderId());
             transaction.setFiatAmount(request.getAmount());
             transaction.setFiatCurrency(request.getCurrency());
-            transaction.setBtcAddress(address); // Reuse field for ETH address
-            transaction.setBtcAmount(ethAmount);
-            transaction.setNetwork("sepolia");
+            transaction.setBtcAddress(address); // Reuse field for the Polygon address
+            transaction.setBtcAmount(polAmount);
+            transaction.setNetwork("polygon");
             transaction.setStatus("PENDING");
             transaction.setConfirmations(0);
             transaction.setCreatedAt(LocalDateTime.now());
@@ -160,17 +160,17 @@ public class CryptoService {
             return new CryptoPaymentResponse(
                     address,
                     "0x" + privateKey,
-                    ethAmount,
+                    polAmount,
                     request.getAmount(),
                     request.getCurrency(),
                     rates.usd,
                     rates.eur,
-                    "sepolia",
-                    "ETH",
+                    "polygon",
+                    "POL",
                     qrData
             );
         } catch (Exception e) {
-            throw new RuntimeException("Failed to generate Ethereum address: " + e.getMessage());
+            throw new RuntimeException("Failed to generate Polygon address: " + e.getMessage());
         }
     }
 

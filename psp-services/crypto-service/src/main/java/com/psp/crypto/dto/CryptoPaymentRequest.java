@@ -24,7 +24,7 @@ public class CryptoPaymentRequest {
     @NotBlank
     private String currency; // fiat currency sent from web shop
 
-    private String cryptoType; // "BTC" or "ETH" (default: ETH for faster confirmations)
+    private String cryptoType; // "BTC" or "POL" (default: POL for faster, cheaper confirmations)
 
     private String merchantTimestamp;
 }
