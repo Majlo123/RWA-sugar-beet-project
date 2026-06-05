@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from 'react';
  * Pairs with the [data-reveal] / .reveal-visible CSS in index.css.
  * Purely presentational; respects prefers-reduced-motion via CSS.
  */
-function Reveal({ as: Tag = 'div', delay = 0, className = '', children, ...rest }) {
+function Reveal({ as = 'div', delay = 0, className = '', children, ...rest }) {
+  const Tag = as;
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
 

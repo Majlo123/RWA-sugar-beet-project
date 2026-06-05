@@ -292,6 +292,7 @@ function KYCReviewsPage() {
 }
 
 function CountCard({ label, value, Icon, accent }) {
+  const IconCmp = Icon;
   const styles = {
     brand: 'text-brand-600 bg-brand-50 border-brand-200',
     info: 'text-info bg-[#eaf0f8] border-[#cfdcef]',
@@ -302,7 +303,7 @@ function CountCard({ label, value, Icon, accent }) {
       <div className="flex items-start justify-between mb-4">
         <p className="section-title">{label}</p>
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${styles}`}>
-          <Icon className="w-5 h-5" />
+          <IconCmp className="w-5 h-5" />
         </div>
       </div>
       <p className="font-display text-4xl font-semibold text-ink tracking-tight leading-none">{value}</p>
