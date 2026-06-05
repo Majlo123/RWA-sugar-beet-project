@@ -19,9 +19,9 @@ function PayPalCancelPage() {
   }, [params, navigate]);
 
   return (
-    <div className="page-container py-20 flex flex-col items-center justify-center text-slate-300">
-      <Loader2 className="w-8 h-8 animate-spin text-amber-400 mb-4" />
-      <p className="text-lg font-display">Cancelling payment…</p>
+    <div className="page-container py-20 flex flex-col items-center justify-center text-muted">
+      <Loader2 className="w-8 h-8 animate-spin text-honey-500 mb-4" />
+      <p className="text-lg font-display text-ink">Cancelling payment…</p>
     </div>
   );
 }

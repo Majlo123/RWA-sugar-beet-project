@@ -37,19 +37,21 @@ function PayPalReturnPage() {
     return (
       <div className="page-container py-20 max-w-xl mx-auto">
         <div className="card-padded text-center">
-          <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+          <div className="w-14 h-14 rounded-2xl bg-honey-50 border border-honey-100 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-7 h-7 text-honey-600" />
+          </div>
           <h2 className="text-2xl mb-2">Could not finish PayPal payment</h2>
-          <p className="text-slate-400">{error}</p>
+          <p className="text-muted">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="page-container py-20 flex flex-col items-center justify-center text-slate-300">
-      <Loader2 className="w-8 h-8 animate-spin text-emerald-400 mb-4" />
-      <p className="text-lg font-display">Finalizing PayPal payment…</p>
-      <p className="text-sm text-slate-500 mt-1">Capturing funds and minting tokens</p>
+    <div className="page-container py-20 flex flex-col items-center justify-center text-muted">
+      <Loader2 className="w-8 h-8 animate-spin text-brand-500 mb-4" />
+      <p className="text-lg font-display text-ink">Finalizing PayPal payment…</p>
+      <p className="text-sm text-faint mt-1">Capturing funds and minting tokens</p>
     </div>
   );
 }

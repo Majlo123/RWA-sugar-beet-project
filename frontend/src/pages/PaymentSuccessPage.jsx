@@ -59,10 +59,12 @@ function PaymentSuccessPage() {
   if (status === 'VERIFYING' || status === 'PAID') {
     return (
       <div className="page-container py-20 max-w-2xl mx-auto">
-        <div className="card-padded text-center space-y-4">
-          <Loader2 className="w-12 h-12 text-emerald-400 animate-spin mx-auto" />
+        <div className="card-padded text-center space-y-4 py-14">
+          <div className="w-16 h-16 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center mx-auto">
+            <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
+          </div>
           <h2 className="text-3xl">{status === 'PAID' ? 'Payment confirmed — minting tokens…' : 'Verifying payment…'}</h2>
-          <p className="text-slate-400">This may take a few seconds while the Treasury contract mints your BEET tokens on Polygon.</p>
+          <p className="text-muted">This may take a few seconds while the Treasury contract mints your BEET tokens on Polygon.</p>
         </div>
       </div>
     );
@@ -70,22 +72,24 @@ function PaymentSuccessPage() {
 
   if (status === 'MINTED') {
     return (
-      <div className="page-container py-20 max-w-2xl mx-auto">
+      <div className="page-container py-20 max-w-2xl mx-auto animate-fade-in">
         <div className="card-padded space-y-6">
           <div className="text-center space-y-3">
-            <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto" />
+            <div className="w-20 h-20 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-11 h-11 text-brand-600" />
+            </div>
             <h1 className="text-4xl">Tokens minted</h1>
-            <p className="text-slate-400">Your BEET tokens are now in your wallet on Polygon.</p>
+            <p className="text-muted">Your BEET tokens are now in your wallet on Polygon.</p>
           </div>
           {txHash && (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-5 space-y-2">
-              <p className="text-xs uppercase tracking-wider text-emerald-300/80 font-bold">Transaction</p>
-              <p className="font-mono text-xs text-emerald-200 break-all">{txHash}</p>
+            <div className="rounded-xl bg-brand-50 border border-brand-200 p-5 space-y-2">
+              <p className="text-xs uppercase tracking-wider text-brand-700 font-bold">Transaction</p>
+              <p className="font-mono text-xs text-brand-800 break-all">{txHash}</p>
               <a
                 href={`${POLYGON_TX_BASE}${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm font-display font-bold text-emerald-300 hover:text-emerald-200 transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm font-display font-semibold text-brand-700 hover:text-brand-800 transition-colors"
               >
                 View on Polygonscan
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -96,7 +100,7 @@ function PaymentSuccessPage() {
             <Link to="/profile" className="btn-primary">
               View portfolio <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link to="/payments/history" className="px-4 py-2.5 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800/60 transition font-display font-semibold">
+            <Link to="/payments/history" className="btn-secondary">
               Payment history
             </Link>
           </div>
@@ -108,8 +112,10 @@ function PaymentSuccessPage() {
   // MINT_FAILED, FAILED, EXPIRED, TIMEOUT, ERROR
   return (
     <div className="page-container py-20 max-w-2xl mx-auto">
-      <div className="card-padded text-center space-y-4">
-        <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto" />
+      <div className="card-padded text-center space-y-4 py-12">
+        <div className="w-16 h-16 rounded-2xl bg-honey-50 border border-honey-100 flex items-center justify-center mx-auto">
+          <AlertTriangle className="w-8 h-8 text-honey-600" />
+        </div>
         <h2 className="text-3xl">
           {status === 'MINT_FAILED' && 'Payment received, but minting failed'}
           {status === 'FAILED' && 'Payment failed'}
@@ -117,10 +123,10 @@ function PaymentSuccessPage() {
           {status === 'TIMEOUT' && 'Still waiting…'}
           {status === 'ERROR' && 'Something went wrong'}
         </h2>
-        {failureReason && <p className="text-slate-400">{failureReason}</p>}
+        {failureReason && <p className="text-muted">{failureReason}</p>}
         <div className="flex flex-wrap gap-3 justify-center pt-2">
           <Link to="/buy-tokens" className="btn-primary">Try again</Link>
-          <Link to="/payments/history" className="px-4 py-2.5 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800/60 transition font-display font-semibold">
+          <Link to="/payments/history" className="btn-secondary">
             Payment history
           </Link>
         </div>

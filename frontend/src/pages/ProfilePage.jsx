@@ -141,8 +141,8 @@ function ProfilePage() {
 
   if (!userProfile && loading) {
     return (
-      <div className="page-container py-12 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+      <div className="page-container py-16 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
       </div>
     );
   }
@@ -157,12 +157,12 @@ function ProfilePage() {
 
   return (
     <div className="page-container py-12 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
         <div>
           <p className="section-title mb-3">Investor Portal</p>
-          <h1 className="text-5xl sm:text-6xl mb-3">Dashboard</h1>
-          <p className="text-xl text-slate-400 font-light">
-            Welcome back, <span className="text-white font-semibold">{userProfile?.username}</span>
+          <h1 className="text-4xl sm:text-6xl mb-3">Dashboard</h1>
+          <p className="text-lg text-muted">
+            Welcome back, <span className="text-ink font-semibold">{userProfile?.username}</span>
           </p>
         </div>
         <button onClick={fetchAllData} disabled={loading} className="btn-secondary">
@@ -172,17 +172,17 @@ function ProfilePage() {
       </div>
 
       {!account && (
-        <div className="alert mb-6 bg-blue-500/10 border-blue-500/30 text-blue-200 flex items-center justify-between gap-4">
+        <div className="alert-info mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Wallet className="w-5 h-5 flex-shrink-0" />
             <span>Connect your MetaMask wallet to claim matured yields.</span>
           </div>
-          <button onClick={connectWallet} className="btn-primary text-xs py-1.5 px-3">Connect</button>
+          <button onClick={connectWallet} className="btn-primary text-sm py-2 px-4 flex-shrink-0">Connect</button>
         </div>
       )}
 
       {isAddressMismatch && (
-        <div className="alert mb-6 bg-amber-500/10 border-amber-500/30 text-amber-200 flex items-center gap-3">
+        <div className="alert-warning mb-6 flex items-center gap-3">
           <ShieldAlert className="w-5 h-5 flex-shrink-0" />
           <span>
             Connected wallet ({account.substring(0, 6)}…{account.substring(account.length - 4)}) does
@@ -197,26 +197,29 @@ function ProfilePage() {
 
       {error && userProfile && <div className="alert-error mb-6">{error}</div>}
 
-      {/* Hero balance card */}
+      {/* Hero balance card — signature deep-green feature panel */}
       <section className="mb-10">
-        <div className="card relative overflow-hidden p-10 border-emerald-500/30 glow-emerald">
-          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-emerald-500/15 via-transparent to-emerald-500/5" />
-          <div className="absolute inset-0 -z-10 grid-pattern opacity-30 [mask-image:radial-gradient(ellipse_at_top_right,black,transparent_60%)]" />
-          <div className="absolute -right-10 -top-10 w-56 h-56 bg-emerald-500/20 rounded-full blur-3xl" />
+        <div
+          className="card relative overflow-hidden p-8 sm:p-10 text-white border-transparent"
+          style={{ backgroundImage: 'linear-gradient(135deg, var(--color-brand-700), var(--color-brand-600) 60%, var(--color-brand-500))' }}
+        >
+          <div className="absolute inset-0 grid-pattern opacity-[0.15] [mask-image:radial-gradient(ellipse_at_top_right,black,transparent_65%)]" />
+          <div className="absolute -right-12 -top-12 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute -left-10 -bottom-16 w-72 h-72 bg-beet-500/25 rounded-full blur-3xl" />
 
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
             <div>
-              <p className="font-eyebrow text-sm uppercase tracking-[0.18em] text-emerald-300 mb-4 flex items-center gap-2 font-bold">
+              <p className="text-sm uppercase tracking-[0.18em] text-white/75 mb-4 flex items-center gap-2 font-bold">
                 <Coins className="w-5 h-5" /> BEET Balance
               </p>
-              <p className="font-display text-7xl sm:text-8xl font-extrabold gradient-text mb-3 tracking-tight leading-none">
+              <p className="font-display text-6xl sm:text-7xl font-semibold mb-3 tracking-tight leading-none">
                 {Number(tokenBalance).toLocaleString(undefined, { maximumFractionDigits: 4 })}
               </p>
-              <p className="text-xl text-slate-400 font-light">
-                ≈ <span className="font-display font-semibold text-slate-300">${(Number(tokenBalance) * 1000).toLocaleString()}</span> USD value
+              <p className="text-lg text-white/80">
+                ≈ <span className="font-display font-semibold text-white">${(Number(tokenBalance) * 1000).toLocaleString()}</span> USD value
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-4 lg:min-w-[420px]">
+            <div className="grid grid-cols-3 gap-3 lg:min-w-[420px]">
               <MiniStat label="Total Invested" value={`$${totalInvestedUSD.toLocaleString()}`} icon={TrendingUp} />
               <MiniStat label="Claimed" value={claimedCount} icon={CheckCircle2} />
               <MiniStat label="Ready" value={maturedUnclaimed} icon={Clock} accent={maturedUnclaimed > 0} />
@@ -229,7 +232,7 @@ function ProfilePage() {
       <section className="grid md:grid-cols-2 gap-6 mb-12">
         <div className="card-padded">
           <h3 className="section-title mb-5">Account</h3>
-          <div className="space-y-3 text-base">
+          <div className="space-y-3.5 text-base">
             <Row label="Username" value={userProfile?.username} />
             <Row
               label="Role"
@@ -265,11 +268,11 @@ function ProfilePage() {
 
         <div className="card-padded">
           <h3 className="section-title mb-5">Wallet</h3>
-          <div className="space-y-3 text-base">
+          <div className="space-y-3.5 text-base">
             <Row
               label="Registered"
               value={
-                <span className="font-mono text-xs">
+                <span className="font-mono text-xs text-ink-soft">
                   {userProfile?.ethAddress?.substring(0, 8)}…{userProfile?.ethAddress?.substring(userProfile.ethAddress.length - 6)}
                 </span>
               }
@@ -278,11 +281,11 @@ function ProfilePage() {
               label="Connected"
               value={
                 account ? (
-                  <span className="font-mono text-xs text-emerald-300">
+                  <span className="font-mono text-xs text-brand-700">
                     {account.substring(0, 8)}…{account.substring(account.length - 6)}
                   </span>
                 ) : (
-                  <span className="text-slate-500">Not connected</span>
+                  <span className="text-faint">Not connected</span>
                 )
               }
             />
@@ -293,7 +296,7 @@ function ProfilePage() {
                   <span className="badge-warning">Mismatch</span>
                 ) : account ? (
                   <span className="badge-success">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
                     Verified
                   </span>
                 ) : (
@@ -308,13 +311,18 @@ function ProfilePage() {
       {/* Investments */}
       <section>
         <p className="section-title mb-3">Portfolio</p>
-        <h2 className="text-4xl sm:text-5xl mb-7">My Investments</h2>
+        <h2 className="text-3xl sm:text-4xl mb-7">My Investments</h2>
 
         {investments.length === 0 ? (
-          <div className="card-padded text-center py-12">
-            <Coins className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400">No investments yet.</p>
-            <p className="text-sm text-slate-500 mt-1">Contact an admin to record your first investment.</p>
+          <div className="card-padded text-center py-16">
+            <div className="w-14 h-14 rounded-2xl bg-cream-deep border border-line flex items-center justify-center mx-auto mb-4">
+              <Coins className="w-7 h-7 text-faint" />
+            </div>
+            <p className="text-ink font-semibold text-lg">No investments yet</p>
+            <p className="text-sm text-muted mt-1.5">Complete KYC and buy BEET tokens to start your portfolio.</p>
+            <Link to="/buy-tokens" className="btn-primary text-sm mt-6">
+              <Coins className="w-4 h-4" /> Buy Tokens
+            </Link>
           </div>
         ) : (
           <div className="grid lg:grid-cols-2 gap-4">
@@ -330,21 +338,21 @@ function ProfilePage() {
               return (
                 <div
                   key={`${inv.id.toString()}-${inv.startTime.toString()}`}
-                  className="card-padded flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-slate-600 transition-colors"
+                  className="card-padded card-hover flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
                   <div className="flex items-start md:items-center gap-4 flex-1 min-w-0">
-                    <div className="w-14 h-14 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
-                      <Coins className="w-7 h-7 text-emerald-400" />
+                    <div className="w-14 h-14 rounded-xl bg-brand-50 border border-brand-200 flex items-center justify-center flex-shrink-0">
+                      <Coins className="w-7 h-7 text-brand-600" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2.5 mb-2 flex-wrap">
-                        <p className="font-display text-2xl font-extrabold tracking-tight">${inv.amountUSD.toString()} USD</p>
+                        <p className="font-display text-2xl font-semibold tracking-tight text-ink">${inv.amountUSD.toString()} USD</p>
                         <span className={status.class}>
                           <status.Icon className="w-3.5 h-3.5" />
                           {status.label}
                         </span>
                       </div>
-                      <p className="text-sm text-slate-400 flex flex-wrap items-center gap-x-4 gap-y-1 font-medium">
+                      <p className="text-sm text-muted flex flex-wrap items-center gap-x-4 gap-y-1 font-medium">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5" /> Started {formatDate(inv.startTime)}
                         </span>
@@ -356,7 +364,7 @@ function ProfilePage() {
                             href={`${POLYGON_TX_BASE}${inv.claimTxHash ?? inv.mintTxHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200 transition-colors font-semibold"
+                            className="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 transition-colors font-semibold"
                           >
                             {inv.claimTxHash ? 'View Claim on Polygonscan' : 'View on Polygonscan'}
                             <ExternalLink className="w-3 h-3" />
@@ -370,7 +378,7 @@ function ProfilePage() {
                     <button
                       onClick={() => handleClaim(inv.id)}
                       disabled={claimingId === inv.id.toString() || !account}
-                      className="btn-primary text-sm"
+                      className="btn-primary text-sm flex-shrink-0"
                     >
                       {claimingId === inv.id.toString() ? (
                         <><Loader2 className="w-4 h-4 animate-spin" /> Claiming…</>
@@ -392,12 +400,12 @@ function ProfilePage() {
 function MiniStat({ label, value, icon, accent }) {
   const IconCmp = icon;
   return (
-    <div className={`rounded-xl px-4 py-3.5 border ${accent ? 'bg-amber-500/10 border-amber-500/30' : 'bg-slate-800/50 border-slate-700/50'}`}>
-      <div className="font-eyebrow flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] font-bold text-slate-400 mb-2">
-        <IconCmp className={`w-3.5 h-3.5 ${accent ? 'text-amber-400' : 'text-slate-500'}`} />
+    <div className={`rounded-xl px-4 py-3.5 border backdrop-blur-sm ${accent ? 'bg-honey-500/25 border-honey-300/40' : 'bg-white/10 border-white/15'}`}>
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] font-bold mb-2 text-white/70">
+        <IconCmp className={`w-3.5 h-3.5 ${accent ? 'text-honey-100' : 'text-white/60'}`} />
         {label}
       </div>
-      <p className={`font-display text-2xl font-extrabold tracking-tight ${accent ? 'text-amber-300' : 'text-white'}`}>{value}</p>
+      <p className={`font-display text-2xl font-semibold tracking-tight ${accent ? 'text-honey-100' : 'text-white'}`}>{value}</p>
     </div>
   );
 }
@@ -405,8 +413,8 @@ function MiniStat({ label, value, icon, accent }) {
 function Row({ label, value }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-slate-400">{label}</span>
-      <span className="text-slate-100 truncate">{value}</span>
+      <span className="text-muted">{label}</span>
+      <span className="text-ink font-medium truncate">{value}</span>
     </div>
   );
 }
@@ -415,38 +423,38 @@ function KYCBanner({ status, reason }) {
   const config = {
     none: {
       title: 'KYC verification required',
-      subtitle: 'Verify your identity so the administrator can record investments to your wallet.',
+      subtitle: 'Verify your identity so investments can be recorded to your wallet.',
       cta: 'Start verification',
-      cls: 'bg-amber-500/10 border-amber-500/30 text-amber-200',
-      iconCls: 'text-amber-400',
+      cls: 'alert-warning',
+      iconCls: 'text-honey-600',
       Icon: ShieldAlert,
     },
     pending: {
       title: 'KYC submission under review',
       subtitle: 'An administrator is reviewing your details. You will be notified once a decision is made.',
       cta: 'View details',
-      cls: 'bg-blue-500/10 border-blue-500/30 text-blue-200',
-      iconCls: 'text-blue-400',
+      cls: 'alert-info',
+      iconCls: 'text-info',
       Icon: Clock,
     },
     rejected: {
       title: 'KYC submission rejected',
       subtitle: reason || 'Submit a new request with corrected details.',
       cta: 'Resubmit',
-      cls: 'bg-rose-500/10 border-rose-500/30 text-rose-200',
-      iconCls: 'text-rose-400',
+      cls: 'alert-error',
+      iconCls: 'text-error',
       Icon: XCircle,
     },
   };
   const c = config[status] || config.none;
 
   return (
-    <div className={`alert mb-6 flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row ${c.cls}`}>
+    <div className={`${c.cls} mb-6 flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row`}>
       <div className="flex items-start gap-3">
         <c.Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${c.iconCls}`} />
         <div>
-          <p className="font-display font-bold text-base mb-0.5">{c.title}</p>
-          <p className="text-sm text-pretty">{c.subtitle}</p>
+          <p className="font-display font-semibold text-base mb-0.5">{c.title}</p>
+          <p className="text-sm text-pretty opacity-90">{c.subtitle}</p>
         </div>
       </div>
       <Link to="/kyc" className="btn-primary text-sm flex-shrink-0">

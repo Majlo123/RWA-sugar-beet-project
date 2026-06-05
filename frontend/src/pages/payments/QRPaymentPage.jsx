@@ -99,8 +99,8 @@ function QRPaymentPage() {
 
   if (loading) {
     return (
-      <div className="page-container py-20 flex items-center justify-center text-slate-300">
-        <Loader2 className="w-6 h-6 animate-spin mr-3" /> Loading…
+      <div className="page-container py-20 flex items-center justify-center text-muted">
+        <Loader2 className="w-6 h-6 animate-spin mr-3 text-brand-500" /> Loading…
       </div>
     );
   }
@@ -110,8 +110,10 @@ function QRPaymentPage() {
   if (payment.status !== 'PENDING') {
     return (
       <div className="page-container py-20">
-        <div className="card-padded text-center">
-          <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+        <div className="card-padded text-center max-w-lg mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-honey-50 border border-honey-100 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-7 h-7 text-honey-600" />
+          </div>
           <h2 className="text-2xl">This payment is no longer pending ({payment.status})</h2>
         </div>
       </div>
@@ -119,53 +121,53 @@ function QRPaymentPage() {
   }
 
   return (
-    <div className="page-container py-12 max-w-2xl mx-auto space-y-8">
+    <div className="page-container py-12 max-w-2xl mx-auto space-y-8 animate-fade-in">
       <div>
-        <span className="eyebrow-emerald mb-3 inline-flex items-center gap-1.5">
-          <QrCode className="w-4 h-4" /> QR Payment
+        <span className="eyebrow mb-3 inline-flex items-center gap-1.5">
+          <QrCode className="w-3.5 h-3.5" /> QR Payment
         </span>
-        <h1 className="text-5xl">Scan to pay</h1>
-        <p className="text-lg text-slate-400 mt-4 font-light">
+        <h1 className="text-4xl sm:text-5xl mt-4">Scan to pay</h1>
+        <p className="text-lg text-muted mt-4">
           Scan this NBS IPS QR code with the mobile banking app to complete the transaction.
         </p>
       </div>
 
       <div className="card-padded space-y-5">
         <div className="flex justify-center">
-          <div className="p-4 rounded-2xl bg-white">
+          <div className="p-4 rounded-2xl bg-white border border-line shadow-soft">
             {qrImage ? (
               <img src={`data:image/png;base64,${qrImage}`} alt="NBS IPS payment QR code" className="w-60 h-60" />
             ) : qrError ? (
-              <div className="w-60 h-60 flex items-center justify-center text-center text-red-600 text-sm p-4">
+              <div className="w-60 h-60 flex items-center justify-center text-center text-error text-sm p-4">
                 {qrError}
               </div>
             ) : (
               <div className="w-60 h-60 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+                <Loader2 className="w-8 h-8 animate-spin text-faint" />
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-2 text-sm text-emerald-300">
+        <div className="flex items-center justify-center gap-2 text-sm text-brand-700 font-medium">
           <Smartphone className="w-4 h-4" />
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
           Waiting for mobile confirmation…
         </div>
 
-        <div className="space-y-2 text-base">
+        <div className="space-y-3 text-base border-t border-line pt-5">
           <Row label="Order" value={<span className="font-mono text-xs">{payment.merchantOrderId}</span>} />
           <Row label="Amount" value={`$${Number(payment.amountUSD).toLocaleString()} USD`} />
         </div>
 
         {ipsString && (
-          <p className="text-[11px] text-slate-500 font-mono break-all bg-slate-900/60 rounded-lg p-3 border border-slate-800">
+          <p className="text-[11px] text-muted font-mono break-all bg-cream-deep rounded-lg p-3 border border-line">
             {ipsString}
           </p>
         )}
 
         <div className="flex gap-3">
-          <button onClick={handleCancel} type="button" className="px-4 py-3 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800/60 transition flex-1">
+          <button onClick={handleCancel} type="button" className="btn-secondary flex-1">
             Cancel
           </button>
           <button onClick={handleConfirm} disabled={submitting} type="button" className="btn-primary flex-1 text-base py-3">
@@ -180,8 +182,8 @@ function QRPaymentPage() {
 function Row({ label, value }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-slate-400">{label}</span>
-      <span className="text-slate-100 font-medium">{value}</span>
+      <span className="text-muted">{label}</span>
+      <span className="text-ink font-medium">{value}</span>
     </div>
   );
 }

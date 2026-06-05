@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sprout, LogIn, Loader2 } from 'lucide-react';
+import { LogIn, Loader2, ShieldCheck, Lock } from 'lucide-react';
 import { loginUser } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
+import BeetLogo from '../components/BeetLogo';
 
 function LoginPage() {
   const [username, setUsername] = useState('');
@@ -30,18 +31,23 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center px-4 py-12 animate-fade-in">
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-12">
-          <div className="inline-flex w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 items-center justify-center shadow-xl shadow-emerald-500/30 mb-6">
-            <Sprout className="w-10 h-10 text-white" />
+    <div className="relative min-h-[calc(100vh-12rem)] flex items-center justify-center px-4 py-14 animate-fade-in">
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="blob bg-brand-200/30 w-[460px] h-[460px] -top-20 -left-16" />
+        <div className="blob bg-honey-200/30 w-[420px] h-[420px] bottom-0 right-0" />
+      </div>
+
+      <div className="w-full max-w-md">
+        <div className="text-center mb-9">
+          <div className="inline-flex w-20 h-20 rounded-2xl bg-surface border border-line shadow-card items-center justify-center mb-6">
+            <BeetLogo size={48} />
           </div>
-          <h1 className="text-5xl mb-3">Welcome back</h1>
-          <p className="text-xl text-slate-400 font-light">Sign in to manage your BEET investments.</p>
+          <h1 className="text-4xl sm:text-5xl mb-3">Welcome back</h1>
+          <p className="text-lg text-muted">Sign in to manage your BEET investments.</p>
         </div>
 
         <div className="card-padded">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="label" htmlFor="username">Username</label>
               <input
@@ -82,9 +88,14 @@ function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-base text-slate-400 mt-7">
+        <div className="flex items-center justify-center gap-6 mt-6 text-[13px] text-faint font-medium">
+          <span className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-brand-500" /> Encrypted</span>
+          <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-brand-500" /> Non-custodial</span>
+        </div>
+
+        <p className="text-center text-base text-muted mt-6">
           Don't have an account?{' '}
-          <Link to="/register" className="text-emerald-400 hover:text-emerald-300 font-semibold">
+          <Link to="/register" className="text-brand-600 hover:text-brand-700 font-semibold">
             Create one
           </Link>
         </p>

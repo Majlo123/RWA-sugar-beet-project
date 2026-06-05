@@ -99,8 +99,8 @@ function KYCPage() {
 
   if (loading) {
     return (
-      <div className="page-container py-12 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+      <div className="page-container py-16 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
       </div>
     );
   }
@@ -110,9 +110,9 @@ function KYCPage() {
   return (
     <div className="page-container py-12 animate-fade-in">
       <div className="mb-10">
-        <span className="eyebrow mb-5"><ShieldCheck className="w-4 h-4" /> Identity Verification</span>
-        <h1 className="text-5xl sm:text-6xl mb-3">KYC verification</h1>
-        <p className="text-xl text-slate-400 font-light text-pretty">
+        <span className="eyebrow mb-5"><ShieldCheck className="w-3.5 h-3.5" /> Identity Verification</span>
+        <h1 className="text-4xl sm:text-6xl mb-3 mt-5">KYC verification</h1>
+        <p className="text-lg text-muted text-pretty">
           Identity verification is required before you can receive BEET tokens.
         </p>
       </div>
@@ -127,7 +127,7 @@ function KYCPage() {
       ) : (
         <div className="card-padded mt-8 max-w-3xl">
           <h2 className="text-2xl sm:text-3xl mb-2">Submit your KYC request</h2>
-          <p className="text-base text-slate-400 mb-6 font-light">
+          <p className="text-base text-muted mb-6">
             Fill in your personal details and attach a scan or photo of your document.
           </p>
 
@@ -150,7 +150,7 @@ function KYCPage() {
                 <label className="label" htmlFor="documentType">Document type</label>
                 <select
                   id="documentType"
-                  className="input"
+                  className="select"
                   value={documentType}
                   onChange={(e) => setDocumentType(e.target.value)}
                 >
@@ -203,21 +203,23 @@ function KYCPage() {
               <label className="label" htmlFor="document">Document (PDF, JPG, JPEG, PNG, up to 5 MB)</label>
               <label
                 htmlFor="document"
-                className="flex items-center gap-3 p-5 rounded-xl border-2 border-dashed border-slate-700 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-colors cursor-pointer"
+                className="flex items-center gap-3 p-5 rounded-xl border-2 border-dashed border-line-strong hover:border-brand-400 hover:bg-brand-50/60 transition-colors cursor-pointer"
               >
-                <Upload className="w-6 h-6 text-emerald-400 flex-shrink-0" />
+                <div className="w-11 h-11 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center flex-shrink-0">
+                  <Upload className="w-5 h-5 text-brand-600" />
+                </div>
                 <div className="flex-1 min-w-0">
                   {file ? (
                     <>
-                      <p className="text-base font-display font-semibold text-white truncate">{file.name}</p>
-                      <p className="text-sm text-slate-400 font-medium">
+                      <p className="text-base font-display font-semibold text-ink truncate">{file.name}</p>
+                      <p className="text-sm text-muted font-medium">
                         {(file.size / 1024).toFixed(0)} KB · Click to replace
                       </p>
                     </>
                   ) : (
                     <>
-                      <p className="text-base font-display font-semibold text-white">Choose a file</p>
-                      <p className="text-sm text-slate-400 font-medium">PDF scan or photo of your document</p>
+                      <p className="text-base font-display font-semibold text-ink">Choose a file</p>
+                      <p className="text-sm text-muted font-medium">PDF scan or photo of your document</p>
                     </>
                   )}
                 </div>
@@ -231,15 +233,15 @@ function KYCPage() {
               />
             </div>
 
-            <div className="rounded-xl bg-blue-500/5 border border-blue-500/20 p-4 text-sm text-blue-200/80 flex gap-3">
-              <AlertTriangle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="alert-info text-sm flex gap-3">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <span className="text-pretty">
                 Your data is stored securely and used solely for identity verification purposes.
                 Documents will not be shared with third parties.
               </span>
             </div>
 
-            <button type="submit" disabled={submitting} className="btn-primary w-full text-base py-3">
+            <button type="submit" disabled={submitting} className="btn-primary w-full text-base py-3.5">
               {submitting ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
               ) : (
@@ -262,22 +264,22 @@ function StatusBanner({ kyc }) {
       Icon: AlertTriangle,
       title: 'Not verified',
       subtitle: 'Complete the form below to submit your KYC request.',
-      cls: 'bg-amber-500/10 border-amber-500/30 text-amber-200',
-      iconCls: 'text-amber-400',
+      cls: 'bg-honey-50 border-honey-100 text-honey-700',
+      iconCls: 'text-honey-600',
     },
     pending: {
       Icon: Clock,
       title: 'Submission under review',
       subtitle: 'An administrator is reviewing your details. You will be notified once a decision is made.',
-      cls: 'bg-blue-500/10 border-blue-500/30 text-blue-200',
-      iconCls: 'text-blue-400',
+      cls: 'bg-[#eaf0f8] border-[#cfdcef] text-[#345b91]',
+      iconCls: 'text-info',
     },
     verified: {
       Icon: CheckCircle2,
       title: 'Verified',
       subtitle: 'Your identity is confirmed. Administrators can now record investments to your wallet.',
-      cls: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200',
-      iconCls: 'text-emerald-400',
+      cls: 'bg-brand-50 border-brand-200 text-brand-800',
+      iconCls: 'text-brand-600',
     },
     rejected: {
       Icon: XCircle,
@@ -285,17 +287,19 @@ function StatusBanner({ kyc }) {
       subtitle: kyc.rejectionReason
         ? `Reason: ${kyc.rejectionReason}`
         : 'You can submit a new request with corrected details.',
-      cls: 'bg-rose-500/10 border-rose-500/30 text-rose-200',
-      iconCls: 'text-rose-400',
+      cls: 'bg-[#fbeceb] border-[#f3d2d0] text-[#a83a35]',
+      iconCls: 'text-error',
     },
   };
   const m = map[status] || map.none;
 
   return (
     <div className={`rounded-2xl border p-6 flex items-start gap-4 ${m.cls}`}>
-      <m.Icon className={`w-8 h-8 flex-shrink-0 ${m.iconCls}`} />
+      <div className="w-14 h-14 rounded-2xl bg-white/70 border border-white flex items-center justify-center flex-shrink-0">
+        <m.Icon className={`w-7 h-7 ${m.iconCls}`} />
+      </div>
       <div>
-        <p className="font-display text-2xl font-extrabold tracking-tight mb-1">{m.title}</p>
+        <p className="font-display text-2xl font-semibold tracking-tight mb-1">{m.title}</p>
         <p className="text-base text-pretty">{m.subtitle}</p>
       </div>
     </div>
@@ -307,7 +311,7 @@ function SubmissionDetails({ kyc }) {
   return (
     <div className="card-padded mt-8 max-w-3xl">
       <h2 className="section-title mb-5">Submitted details</h2>
-      <div className="space-y-3 text-base">
+      <div className="space-y-1 text-base">
         <DetailRow icon={IdCard} label="Full name" value={kyc.fullName} />
         <DetailRow
           icon={FileText}
@@ -338,12 +342,12 @@ function SubmissionDetails({ kyc }) {
 function DetailRow({ icon, label, value }) {
   const Icon = icon;
   return (
-    <div className="flex items-center justify-between gap-3 py-2 border-b border-slate-800 last:border-0">
-      <span className="flex items-center gap-2 text-slate-400">
-        <Icon className="w-4 h-4 text-slate-500" />
+    <div className="flex items-center justify-between gap-3 py-3 border-b border-line last:border-0">
+      <span className="flex items-center gap-2 text-muted">
+        <Icon className="w-4 h-4 text-faint" />
         {label}
       </span>
-      <span className="text-slate-100 font-medium text-right">{value || '-'}</span>
+      <span className="text-ink font-medium text-right">{value || '-'}</span>
     </div>
   );
 }

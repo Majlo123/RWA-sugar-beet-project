@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sprout, UserPlus, Loader2, Wallet } from 'lucide-react';
+import { UserPlus, Loader2, Wallet, ShieldCheck, Lock } from 'lucide-react';
 import { registerUser } from '../services/authService';
+import BeetLogo from '../components/BeetLogo';
 
 function RegisterPage() {
   const [username, setUsername] = useState('');
@@ -30,18 +31,23 @@ function RegisterPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center px-4 py-12 animate-fade-in">
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-12">
-          <div className="inline-flex w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 items-center justify-center shadow-xl shadow-emerald-500/30 mb-6">
-            <Sprout className="w-10 h-10 text-white" />
+    <div className="relative min-h-[calc(100vh-12rem)] flex items-center justify-center px-4 py-14 animate-fade-in">
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="blob bg-brand-200/30 w-[460px] h-[460px] -top-20 right-0" />
+        <div className="blob bg-beet-100/40 w-[420px] h-[420px] bottom-0 -left-16" />
+      </div>
+
+      <div className="w-full max-w-md">
+        <div className="text-center mb-9">
+          <div className="inline-flex w-20 h-20 rounded-2xl bg-surface border border-line shadow-card items-center justify-center mb-6">
+            <BeetLogo size={48} />
           </div>
-          <h1 className="text-5xl mb-3">Create your account</h1>
-          <p className="text-xl text-slate-400 font-light">Start your sugar beet investment journey.</p>
+          <h1 className="text-4xl sm:text-5xl mb-3">Create your account</h1>
+          <p className="text-lg text-muted">Start your sugar beet investment journey.</p>
         </div>
 
         <div className="card-padded">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="label" htmlFor="username">Username</label>
               <input
@@ -68,12 +74,12 @@ function RegisterPage() {
                 required
                 autoComplete="new-password"
               />
-              <p className="text-xs text-slate-500 mt-1.5 font-medium">At least 8 characters recommended.</p>
+              <p className="text-xs text-faint mt-1.5 font-medium">At least 8 characters recommended.</p>
             </div>
 
             <div>
               <label className="label flex items-center gap-1.5" htmlFor="ethAddress">
-                <Wallet className="w-4 h-4 text-emerald-400" />
+                <Wallet className="w-4 h-4 text-brand-500" />
                 Ethereum Address
               </label>
               <input
@@ -85,7 +91,7 @@ function RegisterPage() {
                 placeholder="0x…"
                 required
               />
-              <p className="text-xs text-slate-500 mt-1.5 font-medium text-pretty">
+              <p className="text-xs text-faint mt-1.5 font-medium text-pretty">
                 The wallet that will hold your BEET tokens. Must match MetaMask.
               </p>
             </div>
@@ -103,9 +109,14 @@ function RegisterPage() {
           </form>
         </div>
 
-        <p className="text-center text-base text-slate-400 mt-7">
+        <div className="flex items-center justify-center gap-6 mt-6 text-[13px] text-faint font-medium">
+          <span className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-brand-500" /> Encrypted</span>
+          <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-brand-500" /> Non-custodial</span>
+        </div>
+
+        <p className="text-center text-base text-muted mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-emerald-400 hover:text-emerald-300 font-semibold">
+          <Link to="/login" className="text-brand-600 hover:text-brand-700 font-semibold">
             Sign in
           </Link>
         </p>

@@ -30,15 +30,17 @@ function PaymentFailedPage() {
 
   return (
     <div className="page-container py-20 max-w-2xl mx-auto">
-      <div className="card-padded text-center space-y-4">
-        <XCircle className="w-16 h-16 text-rose-400 mx-auto" />
+      <div className="card-padded text-center space-y-4 py-12">
+        <div className="w-20 h-20 rounded-full bg-[#fbeceb] border border-[#f3d2d0] flex items-center justify-center mx-auto">
+          <XCircle className="w-11 h-11 text-error" />
+        </div>
         <h1 className="text-4xl">Payment failed</h1>
-        <p className="text-slate-400">{reason}</p>
+        <p className="text-muted">{reason}</p>
         <div className="flex flex-wrap gap-3 justify-center pt-2">
           <Link to="/buy-tokens" className="btn-primary">
             Try again <ArrowRight className="w-4 h-4" />
           </Link>
-          <Link to="/payments/history" className="px-4 py-2.5 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800/60 transition font-display font-semibold inline-flex items-center gap-1.5">
+          <Link to="/payments/history" className="btn-secondary inline-flex items-center gap-1.5">
             <History className="w-4 h-4" /> Payment history
           </Link>
         </div>

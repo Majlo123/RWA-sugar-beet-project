@@ -48,8 +48,8 @@ function PayPalPaymentPage() {
 
   if (loading) {
     return (
-      <div className="page-container py-20 flex items-center justify-center text-slate-300">
-        <Loader2 className="w-6 h-6 animate-spin mr-3" /> Loading…
+      <div className="page-container py-20 flex items-center justify-center text-muted">
+        <Loader2 className="w-6 h-6 animate-spin mr-3 text-brand-500" /> Loading…
       </div>
     );
   }
@@ -59,8 +59,10 @@ function PayPalPaymentPage() {
   if (payment.status !== 'PENDING') {
     return (
       <div className="page-container py-20">
-        <div className="card-padded text-center">
-          <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+        <div className="card-padded text-center max-w-lg mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-honey-50 border border-honey-100 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-7 h-7 text-honey-600" />
+          </div>
           <h2 className="text-2xl">This payment is no longer pending ({payment.status})</h2>
         </div>
       </div>
@@ -68,37 +70,37 @@ function PayPalPaymentPage() {
   }
 
   return (
-    <div className="page-container py-12 max-w-2xl mx-auto space-y-8">
+    <div className="page-container py-12 max-w-2xl mx-auto space-y-8 animate-fade-in">
       <div>
-        <span className="eyebrow-emerald mb-3 inline-flex items-center gap-1.5">
-          <Wallet className="w-4 h-4" /> PayPal
+        <span className="eyebrow mb-3 inline-flex items-center gap-1.5">
+          <Wallet className="w-3.5 h-3.5" /> PayPal
         </span>
-        <h1 className="text-5xl">PayPal Sandbox</h1>
-        <p className="text-lg text-slate-400 mt-4 font-light">
-          You are about to pay <span className="font-display font-bold text-emerald-300">${Number(payment.amountUSD).toLocaleString()}</span>
+        <h1 className="text-4xl sm:text-5xl mt-4">PayPal Sandbox</h1>
+        <p className="text-lg text-muted mt-4">
+          You are about to pay <span className="font-display font-semibold text-ink">${Number(payment.amountUSD).toLocaleString()}</span>
           {' '}via PayPal sandbox. Click <em>Pay with PayPal</em> to authorize the transaction.
         </p>
       </div>
 
       <div className="card-padded space-y-5">
-        <div className="flex items-center gap-4 p-5 rounded-xl bg-[#003087]/15 border border-[#0070ba]/40">
-          <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center">
-            <span className="font-display font-extrabold text-2xl text-[#003087]">P</span>
-            <span className="font-display font-extrabold text-2xl text-[#0070ba]">P</span>
+        <div className="flex items-center gap-4 p-5 rounded-xl bg-[#eaf0f8] border border-[#cfdcef]">
+          <div className="w-14 h-14 rounded-full bg-white border border-[#cfdcef] flex items-center justify-center shadow-soft">
+            <span className="font-display font-bold text-2xl text-[#003087]">P</span>
+            <span className="font-display font-bold text-2xl text-[#0070ba] -ml-1">P</span>
           </div>
           <div>
-            <p className="font-display font-bold text-slate-100">Pay with PayPal</p>
-            <p className="text-sm text-slate-400">sandbox.paypal.com</p>
+            <p className="font-display font-semibold text-ink">Pay with PayPal</p>
+            <p className="text-sm text-muted">sandbox.paypal.com</p>
           </div>
         </div>
 
-        <div className="space-y-2 text-base">
+        <div className="space-y-3 text-base">
           <Row label="Order" value={<span className="font-mono text-xs">{payment.merchantOrderId}</span>} />
           <Row label="Amount" value={`$${Number(payment.amountUSD).toLocaleString()} USD`} />
         </div>
 
         <div className="flex gap-3">
-          <button onClick={handleCancel} type="button" className="px-4 py-3 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800/60 transition flex-1">
+          <button onClick={handleCancel} type="button" className="btn-secondary flex-1">
             Cancel
           </button>
           <button onClick={handlePay} disabled={submitting} type="button" className="btn-primary flex-1 text-base py-3">
@@ -113,8 +115,8 @@ function PayPalPaymentPage() {
 function Row({ label, value }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-slate-400">{label}</span>
-      <span className="text-slate-100 font-medium">{value}</span>
+      <span className="text-muted">{label}</span>
+      <span className="text-ink font-medium">{value}</span>
     </div>
   );
 }

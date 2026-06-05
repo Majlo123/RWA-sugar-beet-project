@@ -77,8 +77,8 @@ function BankPaymentPage() {
 
   if (loading) {
     return (
-      <div className="page-container py-20 flex items-center justify-center text-slate-300">
-        <Loader2 className="w-6 h-6 animate-spin mr-3" /> Loading payment…
+      <div className="page-container py-20 flex items-center justify-center text-muted">
+        <Loader2 className="w-6 h-6 animate-spin mr-3 text-brand-500" /> Loading payment…
       </div>
     );
   }
@@ -94,22 +94,24 @@ function BankPaymentPage() {
   if (payment.status !== 'PENDING') {
     return (
       <div className="page-container py-20">
-        <div className="card-padded text-center">
-          <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+        <div className="card-padded text-center max-w-lg mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-honey-50 border border-honey-100 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-7 h-7 text-honey-600" />
+          </div>
           <h2 className="text-2xl mb-2">This payment is no longer pending</h2>
-          <p className="text-slate-400">Current status: <span className="font-semibold text-slate-200">{payment.status}</span></p>
+          <p className="text-muted">Current status: <span className="font-semibold text-ink">{payment.status}</span></p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="page-container py-12 space-y-8">
+    <div className="page-container py-12 space-y-8 animate-fade-in">
       <div>
-        <span className="eyebrow-emerald mb-3 inline-flex items-center gap-1.5">
-          <CreditCard className="w-4 h-4" /> Card Payment
+        <span className="eyebrow mb-3 inline-flex items-center gap-1.5">
+          <CreditCard className="w-3.5 h-3.5" /> Card Payment
         </span>
-        <h1 className="text-5xl">Enter your card details</h1>
+        <h1 className="text-4xl sm:text-5xl mt-4">Enter your card details</h1>
       </div>
 
       <div className="grid lg:grid-cols-12 gap-8">
@@ -142,7 +144,7 @@ function BankPaymentPage() {
               maxLength={23}
               required
             />
-            <p className="text-xs text-slate-500 mt-1">PAN is validated with Luhn check; CVV is cleared after authorization (PCI DSS).</p>
+            <p className="text-xs text-faint mt-1.5">PAN is validated with Luhn check; CVV is cleared after authorization (PCI DSS).</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -183,7 +185,7 @@ function BankPaymentPage() {
           <button
             type="submit"
             disabled={submitting || !formValid}
-            className="btn-primary w-full text-base py-3"
+            className="btn-primary w-full text-base py-3.5"
           >
             {submitting ? (
               <><Loader2 className="w-4 h-4 animate-spin" /> Authorizing…</>
@@ -192,7 +194,7 @@ function BankPaymentPage() {
             )}
           </button>
 
-          <p className="text-xs text-slate-500 text-center">
+          <p className="text-xs text-faint text-center">
             Test cards: 4111 1111 1111 1111 (valid), amounts over $20,000 simulate INSUFFICIENT_FUNDS.
           </p>
         </form>
@@ -200,18 +202,20 @@ function BankPaymentPage() {
         <aside className="lg:col-span-5 space-y-5">
           <div className="card-padded">
             <h3 className="section-title mb-4">Payment summary</h3>
-            <div className="space-y-3 text-base">
+            <div className="space-y-3.5 text-base">
               <Row label="Order" value={<span className="font-mono text-xs">{merchantOrderId}</span>} />
               <Row label="Amount" value={`$${Number(amount).toLocaleString()} USD`} />
               <Row label="Method" value="Card / Bank" />
             </div>
           </div>
-          <div className="card-padded">
+          <div className="card-padded bg-surface-soft">
             <div className="flex items-start gap-3">
-              <ShieldCheck className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+              <div className="w-9 h-9 rounded-lg bg-brand-50 border border-brand-100 flex items-center justify-center flex-shrink-0">
+                <ShieldCheck className="w-4.5 h-4.5 text-brand-600" />
+              </div>
               <div>
-                <h4 className="font-display font-bold text-slate-100 mb-1">PCI-DSS secured</h4>
-                <p className="text-sm text-slate-400">
+                <h4 className="font-display font-semibold text-ink mb-1">PCI-DSS secured</h4>
+                <p className="text-sm text-muted">
                   Card data is masked, CVV is cleared after authorization, and all attempts are
                   logged. We never store the full PAN.
                 </p>
@@ -227,8 +231,8 @@ function BankPaymentPage() {
 function Row({ label, value }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-slate-400">{label}</span>
-      <span className="text-slate-100 font-medium">{value}</span>
+      <span className="text-muted">{label}</span>
+      <span className="text-ink font-medium">{value}</span>
     </div>
   );
 }
