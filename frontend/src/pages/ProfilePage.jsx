@@ -66,12 +66,30 @@ function ProfilePage() {
             .map((p) => p.txHash);
         } catch { /* ignore */ }
 
-        // Fetch YieldClaimed events to get claim tx hashes keyed by investmentId
-        const claimFilter = treasuryContract.filters.YieldClaimed();
-        const claimEvents = await treasuryContract.queryFilter(claimFilter);
+        // Fetch YieldClaimed events to get claim tx hashes keyed by investmentId.
+        // Public Polygon RPC caps eth_getLogs at a 10000-block range per call, so
+        // page backwards from the latest block until every claimed investment's
+        // event has been found (or a safety cap is hit).
         const claimTxByInvestmentId = {};
-        for (const ev of claimEvents) {
-          claimTxByInvestmentId[ev.args.investmentId.toString()] = ev.transactionHash;
+        const claimedIds = investmentDetails
+          .map((inv, index) => (inv[4] ? investmentIds[index].toString() : null))
+          .filter(Boolean);
+
+        if (claimedIds.length > 0) {
+          const claimFilter = treasuryContract.filters.YieldClaimed();
+          const CHUNK = 9999;
+          const MAX_CHUNKS = 200;
+          let toBlock = await provider.getBlockNumber();
+
+          for (let i = 0; i < MAX_CHUNKS && toBlock >= 0; i++) {
+            const fromBlock = Math.max(toBlock - CHUNK, 0);
+            const events = await treasuryContract.queryFilter(claimFilter, fromBlock, toBlock);
+            for (const ev of events) {
+              claimTxByInvestmentId[ev.args.investmentId.toString()] = ev.transactionHash;
+            }
+            if (claimedIds.every((id) => claimTxByInvestmentId[id]) || fromBlock === 0) break;
+            toBlock = fromBlock - 1;
+          }
         }
 
         // Sort investments by startTime ascending so they align with mintedTxHashes order
